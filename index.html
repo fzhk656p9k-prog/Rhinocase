@@ -1,0 +1,2095 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="RhinoCase">
+<meta name="theme-color" content="#FAFBFC">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>RhinoCase</title>
+<style>
+:root{
+  --paper:#FAFBFC;--card:#FFFFFF;--ink:#16232B;--steel:#5B6B76;
+  --line:#DCE3E8;--line2:#EBF0F3;--accent:#7C3AED;--accent-soft:#F1EBFD;
+  --mark:#C8452C;--mark-soft:#F9E9E5;--warn:#B4690E;--warn-soft:#FBF0DF;
+  --ok:#7C3AED;--radius:10px;--pad:16px;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{background:var(--paper);color:var(--ink);
+  font:16px/1.55 -apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC",system-ui,sans-serif;
+  overscroll-behavior:none}
+button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:pointer}
+input,select,textarea{font:inherit;color:var(--ink)}
+textarea{resize:vertical}
+.screen{display:none;min-height:100dvh}
+.screen.active{display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:20;background:rgba(250,251,252,.93);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);
+  padding:calc(env(safe-area-inset-top) + 8px) var(--pad) 8px;display:flex;align-items:center;gap:8px;min-height:52px}
+.topbar h1{font-size:17px;font-weight:650;margin:0;flex:1;min-width:0;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em}
+.topbar .sub{font-size:12px;color:var(--steel);font-weight:400;display:block;margin-top:1px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{min-width:42px;height:42px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+  color:var(--accent);font-size:14.5px;font-weight:600;padding:0 9px;flex:none}
+.iconbtn:active{background:var(--accent-soft)}
+.iconbtn.plain{color:var(--steel)}
+.brand{font-weight:750;letter-spacing:.02em}.brand .cx{color:var(--accent)}
+.content{flex:1;width:100%;max-width:880px;margin:0 auto;padding:var(--pad);
+  padding-bottom:calc(env(safe-area-inset-bottom) + 96px)}
+.searchrow{display:flex;gap:10px;margin-bottom:14px}
+.search{flex:1;border:1px solid var(--line);border-radius:var(--radius);background:var(--card);
+  padding:11px 14px;font-size:16px;outline:none}
+.search:focus{border-color:var(--accent)}
+.list{display:flex;flex-direction:column;gap:10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:14px var(--pad);display:flex;align-items:center;gap:12px;text-align:left;width:100%}
+.card:active{border-color:var(--accent)}
+.card .main{flex:1;min-width:0}
+.card .t{font-weight:650;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .d{font-size:13px;color:var(--steel);margin-top:2px}
+.card .chev{color:var(--line);font-size:20px;flex:none}
+.badge{display:inline-block;font-size:11px;font-weight:650;letter-spacing:.04em;border:1px solid var(--line);
+  border-radius:5px;padding:2px 7px;color:var(--steel);vertical-align:1px;margin-right:6px}
+.badge.acc{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+.badge.warn{color:var(--warn);border-color:var(--warn);background:var(--warn-soft)}
+.badge.mark{color:var(--mark);border-color:var(--mark);background:var(--mark-soft)}
+.empty{text-align:center;color:var(--steel);padding:52px 20px;font-size:15px;line-height:1.8;
+  border:1px dashed var(--line);border-radius:var(--radius)}
+.fab{position:fixed;right:calc(env(safe-area-inset-right) + 20px);bottom:calc(env(safe-area-inset-bottom) + 20px);
+  z-index:25;width:58px;height:58px;border-radius:16px;background:var(--accent);color:#fff;
+  font-size:30px;font-weight:300;line-height:1;box-shadow:0 4px 16px rgba(124,58,237,.35);
+  display:flex;align-items:center;justify-content:center}
+.fab:active{transform:scale(.96)}
+.sechead{display:flex;align-items:baseline;gap:8px;margin:22px 2px 10px}
+.sechead .zh{font-size:12.5px;font-weight:700;letter-spacing:.08em;color:var(--steel)}
+.sechead .rule{flex:1;height:1px;background:var(--line)}
+/* module grid on case hub */
+.modgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px}
+.mod{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:13px 14px;text-align:left;display:flex;flex-direction:column;gap:3px;min-height:64px;justify-content:center}
+.mod:active{border-color:var(--accent)}
+.mod .mt{font-weight:650;font-size:14.5px}
+.mod .md{font-size:12px;color:var(--steel);font-variant-numeric:tabular-nums}
+.mod .md.done{color:var(--accent);font-weight:600}
+.mod.wide{grid-column:1 / -1}
+/* date group / thumbs */
+.dgroup{margin-bottom:20px}
+.dlabel{display:flex;align-items:baseline;gap:10px;margin:0 2px 8px}
+.dlabel .stage{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent);
+  font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.dlabel .stage.pre{color:var(--steel)}.dlabel .stage.op{color:var(--mark)}
+.dlabel .date{font-size:12px;color:var(--steel);font-variant-numeric:tabular-nums}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.thumb{position:relative;border:1px solid var(--line);border-radius:8px;overflow:hidden;
+  aspect-ratio:3/4;background:#101619;padding:0;display:flex;align-items:center;justify-content:center}
+.thumb img{width:100%;height:100%;object-fit:contain;display:block}
+.thumb .v{position:absolute;left:0;bottom:0;right:0;font-size:10px;font-weight:650;color:#fff;
+  background:linear-gradient(transparent,rgba(0,0,0,.72));padding:14px 6px 4px;text-align:left;letter-spacing:.03em}
+.thumb .cal{position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;
+  background:var(--accent);border:1.5px solid #fff}
+.thumb .an{position:absolute;top:4px;left:4px;font-size:9px;font-weight:800;letter-spacing:.05em;
+  color:#fff;background:rgba(124,58,237,.92);border-radius:4px;padding:2px 5px}
+.thumb .dw{position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:2px;
+  background:var(--mark);border:1.5px solid #fff}
+/* dialogs */
+dialog{border:none;border-radius:14px;padding:0;max-width:440px;width:calc(100% - 44px);
+  background:var(--card);color:var(--ink);box-shadow:0 12px 40px rgba(22,35,43,.18)}
+dialog::backdrop{background:rgba(22,35,43,.35)}
+.dlg{padding:20px}.dlg h2{margin:0 0 14px;font-size:17px;font-weight:700}
+.field{margin-bottom:13px}
+.field label{display:block;font-size:12px;font-weight:650;color:var(--steel);letter-spacing:.05em;margin-bottom:5px}
+.field input[type=text],.field input[type=date],.field input[type=number],.field input[type=password],
+.field select,.field textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 12px;
+  font-size:16px;background:var(--paper);outline:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+.dlgrow{display:flex;gap:10px;margin-top:18px}
+.btn{flex:1;border-radius:9px;padding:12px;font-size:15px;font-weight:650;text-align:center;
+  border:1px solid var(--line);color:var(--steel);min-height:46px}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.danger{color:var(--mark);border-color:var(--mark)}
+.btn.small{padding:9px 12px;min-height:0;font-size:13.5px;flex:none}
+.btn:active{opacity:.85}
+.hint{font-size:12.5px;color:var(--steel);line-height:1.6;margin-top:8px}
+.warnbox{background:var(--warn-soft);border:1px solid #EAD5AE;border-radius:9px;padding:10px 12px;
+  font-size:12.5px;color:#7A4E0A;line-height:1.6;margin-bottom:12px}
+.lockbox{background:var(--accent-soft);border:1px solid #DCCEF8;border-radius:9px;padding:10px 12px;
+  font-size:12.5px;color:#4C2A9E;line-height:1.6;margin-bottom:12px;display:flex;gap:8px;align-items:flex-start}
+/* photo screen */
+#scr-photo,#scr-sketch{background:#101619}
+#scr-photo .topbar,#scr-sketch .topbar{background:rgba(16,22,25,.9);border-bottom-color:#242E33;color:#E9EEF1}
+#scr-photo .topbar .sub,#scr-sketch .topbar .sub{color:#93A3AC}
+#scr-photo .iconbtn,#scr-sketch .iconbtn{color:#A78BFA}
+.canvaswrap{position:relative;flex:1;overflow:hidden}
+#cv,#cvk{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
+.modebar{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:5;display:flex;
+  background:rgba(16,22,25,.85);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  border:1px solid #2C383E;border-radius:11px;padding:3px;gap:2px;max-width:calc(100vw - 20px);overflow:auto}
+.modebar::-webkit-scrollbar{display:none}
+.modebar button{padding:9px 13px;border-radius:8px;font-size:13px;font-weight:650;color:#93A3AC;min-height:40px;white-space:nowrap}
+.modebar button.on{background:var(--accent);color:#fff}
+.rail{background:#131B1F;border-top:1px solid #2C383E;color:#E9EEF1;padding:0 0 calc(env(safe-area-inset-bottom) + 10px)}
+.rail::before{content:"";display:block;height:7px;
+  background:repeating-linear-gradient(90deg,#3A474E 0 1px,transparent 1px 8px) bottom/100% 4px no-repeat,
+    repeating-linear-gradient(90deg,#4A5960 0 1px,transparent 1px 40px) bottom/100% 7px no-repeat}
+.railinner{padding:10px 14px 4px;max-width:880px;margin:0 auto}
+.railtitle{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:.1em;color:#7E9098;margin-bottom:8px}
+.railtitle .st{margin-left:auto;font-family:var(--mono);font-weight:600;letter-spacing:.02em}
+.railtitle .st.ok{color:#A78BFA}.railtitle .st.no{color:#E07B63}
+.chips{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px}
+.chips::-webkit-scrollbar{display:none}
+.mchip{flex:none;border:1px solid #2C383E;border-radius:9px;padding:8px 12px;min-width:118px;background:#182226}
+.mchip .k{font-size:10.5px;font-weight:700;letter-spacing:.05em;color:#7E9098;white-space:nowrap}
+.mchip .val{font-family:var(--mono);font-size:19px;font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums;color:#F2F6F8;white-space:nowrap}
+.mchip .val .u{font-size:12px;color:#7E9098;font-weight:500}
+.mchip .ref{font-family:var(--mono);font-size:10.5px;color:#7E9098;margin-top:1px;white-space:nowrap}
+.mchip .ref .out{color:#E07B63;font-weight:700}
+.mchip.pend .val{color:#4A5960}
+.lmchips{display:flex;gap:7px;overflow-x:auto;padding-bottom:8px;-webkit-overflow-scrolling:touch}
+.lmchips::-webkit-scrollbar{display:none}
+.lmchip{flex:none;border:1px solid #2C383E;border-radius:9px;padding:7px 11px;display:flex;align-items:center;gap:7px;
+  color:#93A3AC;font-size:13px;font-weight:650;min-height:42px;background:#182226}
+.lmchip .abbr{font-family:var(--mono);font-weight:700}
+.lmchip.set{color:#E9EEF1;border-color:#3A474E}.lmchip.set .abbr{color:#A78BFA}
+.lmchip.act{border-color:#A78BFA;background:rgba(124,58,237,.28);color:#fff;box-shadow:0 0 0 1px #A78BFA inset}
+.lmchip .x{color:#7E9098;font-size:15px;padding:2px 2px 2px 4px}
+.calpanel{display:flex;gap:8px;align-items:center;padding-bottom:8px;flex-wrap:wrap}
+.calpanel .qmm{border:1px solid #2C383E;border-radius:8px;padding:9px 13px;color:#E9EEF1;font-family:var(--mono);font-weight:600;min-height:42px}
+.calpanel .qmm:active{border-color:#A78BFA}
+.calpanel input{width:88px;border:1px solid #2C383E;border-radius:8px;background:#182226;color:#fff;
+  padding:9px 10px;font-family:var(--mono);font-size:16px;outline:none}
+.calpanel .go{background:var(--accent);border-radius:8px;color:#fff;font-weight:650;padding:9px 16px;min-height:42px}
+.calmsg{font-size:12.5px;color:#93A3AC;padding-bottom:8px;line-height:1.6}
+.calmsg b{color:#A78BFA}
+/* aesthetic form inside photo rail */
+.railbody-tall{max-height:44vh;overflow:auto;-webkit-overflow-scrolling:touch;padding-right:2px}
+.rail .aesrow{border-bottom:1px solid #232E34;padding:10px 0}
+.rail .aesrow:last-child{border-bottom:none}
+.rail .aesrow .q{font-size:13px;font-weight:650;color:#C9D4DA;margin-bottom:7px}
+.rail .aesrow .opts{display:flex;flex-wrap:wrap;gap:6px}
+.rail .opt{background:#182226;border-color:#2C383E;color:#B7C3C9}
+.rail .opt.on{background:var(--accent);border-color:var(--accent);color:#fff}
+#mb-lmvis{color:#93A3AC}
+/* draw palette */
+.drawbar{display:flex;gap:8px;align-items:center;padding-bottom:8px;flex-wrap:wrap}
+.sw{width:34px;height:34px;border-radius:50%;border:2px solid #2C383E;flex:none;position:relative}
+.sw.on{border-color:#fff;box-shadow:0 0 0 2px var(--accent)}
+.sw.eraser{background:#182226;display:flex;align-items:center;justify-content:center;color:#93A3AC;font-size:15px}
+.tool{border:1px solid #2C383E;border-radius:8px;padding:8px 12px;color:#E9EEF1;font-weight:650;font-size:13px;min-height:40px}
+.tool:active{border-color:#A78BFA}.tool[disabled]{opacity:.4}
+.tool.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.wsel{display:flex;gap:4px;align-items:center}
+.wsel button{width:34px;height:34px;border-radius:8px;border:1px solid #2C383E;display:flex;align-items:center;justify-content:center}
+.wsel button.on{border-color:#A78BFA;background:rgba(124,58,237,.25)}
+.wsel .dot{background:#E9EEF1;border-radius:50%}
+/* settings & generic blocks */
+.setblock{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px}
+.setblock h3{margin:0 0 6px;font-size:15px;font-weight:700}
+.setblock p{margin:0 0 12px;font-size:13px;color:var(--steel);line-height:1.65}
+.refgrid{display:grid;grid-template-columns:1fr auto auto;gap:8px 10px;align-items:center;margin-top:10px}
+.refgrid .n{font-size:13.5px}.refgrid .n small{display:block;color:var(--steel);font-size:11px}
+.refgrid input{width:74px;border:1px solid var(--line);border-radius:7px;padding:8px;font-family:var(--mono);
+  font-size:15px;text-align:center;background:var(--paper);outline:none}
+.refgrid input:focus{border-color:var(--accent)}
+.swatchrow{display:flex;align-items:center;gap:12px;margin-top:8px}
+.swatchrow .pv{width:40px;height:40px;border-radius:8px;border:1px solid var(--line)}
+.statrow{display:flex;justify-content:space-between;font-size:14px;padding:8px 0;border-bottom:1px solid var(--line2)}
+.statrow:last-child{border-bottom:none}
+.statrow b{font-family:var(--mono);font-weight:600;font-variant-numeric:tabular-nums}
+.progress{font-family:var(--mono);font-size:13px;color:var(--steel);margin-top:8px;min-height:18px}
+/* forms (aesthetic / opplan) */
+.formrow{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:9px}
+.formrow .q{font-size:14px;font-weight:650;margin-bottom:9px;display:flex;align-items:center;gap:8px}
+.formrow .q .en{color:var(--steel);font-weight:500;font-size:12px}
+.opts{display:flex;flex-wrap:wrap;gap:7px}
+.opt{border:1px solid var(--line);border-radius:20px;padding:7px 13px;font-size:13.5px;color:var(--ink);
+  background:var(--paper);min-height:38px;display:inline-flex;align-items:center}
+.opt:active{border-color:var(--accent)}
+.opt.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.opt.multi.on{background:var(--ink);border-color:var(--ink)}
+.formgroup{margin:20px 0 8px;font-size:12.5px;font-weight:700;letter-spacing:.06em;color:var(--accent);
+  border-top:1px solid var(--line);padding-top:16px}
+.formgroup:first-child{border-top:none;padding-top:0}
+.savebar{position:fixed;left:0;right:0;bottom:0;z-index:22;background:rgba(250,251,252,.95);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-top:1px solid var(--line);
+  padding:10px var(--pad) calc(env(safe-area-inset-bottom) + 10px)}
+.savebar .inner{max-width:880px;margin:0 auto;display:flex;gap:10px;align-items:center}
+.savebar .status{flex:1;font-size:12.5px;color:var(--steel)}
+/* learn / entries */
+.qa{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:13px 14px;margin-bottom:10px}
+.qa label{display:block;font-size:13.5px;font-weight:650;margin-bottom:7px}
+.qa textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:15px;
+  background:var(--paper);outline:none;min-height:64px;line-height:1.5}
+.qa textarea:focus{border-color:var(--accent)}
+.qa textarea[readonly]{background:var(--line2);color:#3a4a52}
+.entry{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:9px}
+.entry .et{font-weight:650;font-size:14.5px;margin-bottom:3px}
+.entry .em{font-size:13px;color:var(--steel);line-height:1.55;white-space:pre-wrap}
+.entry .ea{display:flex;gap:14px;margin-top:8px}
+.entry .ea button{font-size:12.5px;font-weight:650;color:var(--accent)}
+.entry .ea button.del{color:var(--mark)}
+.pva{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+.pva th,.pva td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line2)}
+.pva th{font-size:11px;letter-spacing:.05em;color:var(--steel);font-weight:700}
+.pva td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+.pva .hit{color:var(--accent);font-weight:700}.pva .miss{color:var(--mark);font-weight:700}
+.pva .na{color:var(--steel)}
+.pill{display:inline-block;font-size:11px;font-weight:700;border-radius:20px;padding:3px 9px;letter-spacing:.03em}
+.pill.hyp{background:var(--warn-soft);color:var(--warn)}
+.pill.test{background:var(--accent-soft);color:var(--accent)}
+.pill.est{background:#E4F0E6;color:#2E7D46}
+.pill.ref{background:var(--mark-soft);color:var(--mark)}
+/* overlay compare */
+.cmpwrap{position:relative;background:#101619;border-radius:10px;overflow:hidden;margin-bottom:12px}
+.cmpwrap canvas{width:100%;display:block}
+.slrow{display:flex;align-items:center;gap:10px;margin:10px 2px}
+.slrow input[type=range]{flex:1}
+.selrow{display:flex;gap:8px;margin-bottom:10px}
+.selrow select{flex:1;border:1px solid var(--line);border-radius:8px;padding:9px;font-size:14px;background:var(--card)}
+/* misc */
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 88px);
+  z-index:60;background:var(--ink);color:#fff;font-size:14px;font-weight:600;padding:11px 18px;border-radius:10px;
+  opacity:0;transition:opacity .25s;pointer-events:none;max-width:calc(100% - 44px);text-align:center}
+.toast.show{opacity:1}
+.banner{background:var(--mark-soft);color:var(--mark);font-size:13px;font-weight:600;padding:9px var(--pad);text-align:center}
+.notebar{background:var(--accent-soft);border:1px solid #DCCEF8;border-radius:10px;padding:11px 13px;margin-bottom:12px;
+  font-size:13px;color:#4C2A9E;line-height:1.55;display:flex;gap:10px;align-items:flex-start}
+.notebar .b{margin-left:auto;flex:none}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div id="storagebanner" class="banner" style="display:none">此環境不支援持久儲存——資料僅存在本次工作階段，請勿輸入真實病人資料</div>
+
+<!-- HOME -->
+<section class="screen active" id="scr-home">
+  <div class="topbar">
+    <h1 class="brand">Rhino<span class="cx">Case</span></h1>
+    <button class="iconbtn" onclick="go('#rules')">規則庫</button>
+    <button class="iconbtn" onclick="go('#stats')">統計</button>
+    <button class="iconbtn" onclick="go('#settings')">設定</button>
+  </div>
+  <div class="content">
+    <div class="searchrow"><input class="search" id="q" type="search" placeholder="搜尋病歷號或別名" oninput="renderHome()"></div>
+    <div class="list" id="patientlist"></div>
+  </div>
+  <button class="fab" onclick="dlgPatient()" aria-label="新增病人">＋</button>
+</section>
+
+<!-- PATIENT -->
+<section class="screen" id="scr-patient">
+  <div class="topbar"><button class="iconbtn plain" onclick="history.back()">‹ 返回</button>
+    <h1 id="pt-title">病人</h1><button class="iconbtn" onclick="dlgPatient(cur.patient)">編輯</button></div>
+  <div class="content"><div class="sechead"><span class="zh">手術紀錄</span><div class="rule"></div></div>
+    <div class="list" id="caselist"></div></div>
+  <button class="fab" onclick="dlgCase()" aria-label="新增手術">＋</button>
+</section>
+
+<!-- CASE HUB -->
+<section class="screen" id="scr-case">
+  <div class="topbar"><button class="iconbtn plain" onclick="history.back()">‹ 返回</button>
+    <h1 id="cs-title">Case</h1><button class="iconbtn" onclick="dlgCase(cur.kase)">編輯</button></div>
+  <div class="content">
+    <div id="rulenote"></div>
+    <div class="modgrid" id="casemods"></div>
+    <div class="sechead"><span class="zh">照片時間軸</span><div class="rule"></div>
+      <button class="iconbtn" style="height:auto" onclick="dlgAddPhotos()">＋ 照片</button></div>
+    <div id="phototimeline"></div>
+  </div>
+</section>
+
+<!-- PHOTO -->
+<section class="screen" id="scr-photo">
+  <div class="topbar"><button class="iconbtn plain" onclick="history.back()">‹ 返回</button>
+    <h1 id="ph-title">照片<span class="sub" id="ph-sub"></span></h1>
+    <button class="iconbtn" onclick="deletePhoto()" style="color:#E07B63">刪除</button></div>
+  <div class="canvaswrap"><canvas id="cv"></canvas>
+    <div class="modebar" id="modebar">
+      <button data-m="view" class="on" onclick="setMode('view')">檢視</button>
+      <button data-m="cal" onclick="setMode('cal')">校正</button>
+      <button data-m="mark" onclick="setMode('mark')">標記</button>
+      <button data-m="aes" id="mb-aes" onclick="setMode('aes')">美學</button>
+      <button data-m="free" onclick="setMode('free')">量測</button>
+      <button data-m="draw" onclick="setMode('draw')">繪圖</button>
+      <button id="mb-lmvis" onclick="toggleLmVis()">隱藏點</button>
+    </div></div>
+  <div class="rail"><div class="railinner">
+    <div class="railtitle"><span id="railname">量測</span><span class="st" id="calstate"></span></div>
+    <div id="railbody"></div></div></div>
+</section>
+
+<!-- SKETCH -->
+<section class="screen" id="scr-sketch">
+  <div class="topbar"><button class="iconbtn plain" onclick="history.back()">‹ 返回</button>
+    <h1 id="sk-title">手繪<span class="sub" id="sk-sub"></span></h1>
+    <button class="iconbtn" onclick="deleteSketch()" style="color:#E07B63">刪除</button></div>
+  <div class="canvaswrap"><canvas id="cvk"></canvas></div>
+  <div class="rail"><div class="railinner">
+    <div class="railtitle"><span>繪圖 SKETCH</span></div>
+    <div id="skrail"></div></div></div>
+</section>
+
+<!-- FORM (aesthetic / opplan) -->
+<section class="screen" id="scr-form">
+  <div class="topbar"><button class="iconbtn plain" onclick="history.back()">‹ 返回</button>
+    <h1 id="fm-title">分析</h1></div>
+  <div class="content" id="formbody"></div>
+  <div class="savebar"><div class="inner"><span class="status" id="fm-status"></span>
+    <button class="btn small" onclick="clearForm()">清除</button>
+    <button class="btn pri small" onclick="saveForm()">儲存</button></div></div>
+</section>
+
+<!-- LEARN -->
+<section class="screen" id="scr-learn">
+  <div class="topbar"><button class="iconbtn plain" onclick="history.back()">‹ 返回</button>
+    <h1 id="ln-title">學習</h1></div>
+  <div class="content" id="learnbody"></div>
+</section>
+
+<!-- COMPARE -->
+<section class="screen" id="scr-compare">
+  <div class="topbar"><button class="iconbtn plain" onclick="history.back()">‹ 返回</button>
+    <h1>疊圖比對<span class="sub" id="cmp-sub"></span></h1></div>
+  <div class="content" id="comparebody"></div>
+</section>
+
+<!-- RULES -->
+<section class="screen" id="scr-rules">
+  <div class="topbar"><button class="iconbtn plain" onclick="history.back()">‹ 返回</button>
+    <h1>規則庫<span class="sub">經驗法則 · 假設→驗證→確立</span></h1></div>
+  <div class="content"><div id="rulesbody"></div></div>
+  <button class="fab" onclick="dlgRule()" aria-label="新增規則">＋</button>
+</section>
+
+<!-- STATS -->
+<section class="screen" id="scr-stats">
+  <div class="topbar"><button class="iconbtn plain" onclick="history.back()">‹ 返回</button><h1>統計</h1></div>
+  <div class="content" id="statsbody"></div>
+</section>
+
+<!-- SETTINGS -->
+<section class="screen" id="scr-settings">
+  <div class="topbar"><button class="iconbtn plain" onclick="history.back()">‹ 返回</button><h1>設定與備份</h1></div>
+  <div class="content">
+    <div class="setblock"><h3>備份</h3>
+      <p>匯出全部病人、case、照片、量測、表單、繪圖與學習紀錄為單一檔案，可加密（AES-GCM）。換機在新裝置匯入即可還原。</p>
+      <div class="dlgrow" style="margin-top:0">
+        <button class="btn pri" onclick="exportBackup()">匯出備份</button>
+        <button class="btn" onclick="document.getElementById('importfile').click()">匯入備份</button></div>
+      <input type="file" id="importfile" accept=".zip,.rcse" style="display:none" onchange="importBackup(this.files[0]);this.value=''">
+      <div class="progress" id="bkprog"></div>
+      <p class="hint" style="margin-top:10px">未加密備份請存於受控位置（本機「檔案」或外接碟）；加密備份可放 iCloud Drive，密碼遺失即無法復原。</p></div>
+    <div class="setblock"><h3>量測參考區間</h3>
+      <p>預設為古典（高加索）文獻值，僅供對照。請依採用的亞洲文獻自行修改；偏移量以 0 為理想，超過上限即標記。</p>
+      <div class="refgrid" id="refgrid"></div>
+      <div class="dlgrow"><button class="btn pri" onclick="saveRefs()">儲存參考區間</button></div></div>
+    <div class="setblock"><h3>繪圖皮膚色</h3>
+      <p>輪廓修飾模擬用的皮膚色，可依膚色微調。</p>
+      <div class="swatchrow"><span class="pv" id="skinpv"></span>
+        <input type="color" id="skincolor" style="width:64px;height:40px;border:none;background:none">
+        <button class="btn pri small" onclick="saveSkin()">儲存</button></div></div>
+    <div class="setblock"><h3>資料統計</h3><div id="setstats"></div></div>
+    <div class="setblock"><h3>危險區</h3><p>清除此裝置上的全部資料。清除前請先匯出備份。</p>
+      <div class="dlgrow" style="margin-top:0"><button class="btn danger" onclick="wipeAll()">清除全部資料</button></div></div>
+    <p class="hint" style="text-align:center">RhinoCase v0.8 · local-first · 資料不離開此裝置</p>
+  </div>
+</section>
+
+<!-- DIALOGS -->
+<dialog id="dlg-patient"><form class="dlg" method="dialog" onsubmit="return savePatient(event)">
+  <h2 id="dlgp-h">新增病人</h2>
+  <div class="field"><label>病歷號 CHART NO.</label><input type="text" id="f-chart" autocomplete="off" enterkeyhint="done"></div>
+  <div class="field"><label>別名／代稱（選填，建議去識別化）</label><input type="text" id="f-alias" autocomplete="off" enterkeyhint="done"></div>
+  <div class="dlgrow"><button type="button" class="btn" onclick="closeDlg('dlg-patient')">取消</button>
+    <button type="button" class="btn pri" onclick="savePatient()">儲存</button></div>
+  <div class="dlgrow" id="dlgp-del" style="display:none"><button type="button" class="btn danger" onclick="deletePatient()">刪除病人（含全部手術與照片）</button></div>
+</form></dialog>
+
+<dialog id="dlg-case"><form class="dlg" method="dialog" onsubmit="return saveCase(event)">
+  <h2 id="dlgc-h">新增手術</h2>
+  <div class="field"><label>類型</label><select id="f-ctype">
+    <option value="primary">Primary</option><option value="revision">Revision</option>
+    <option value="septo">Septoplasty / functional</option></select></div>
+  <div class="field"><label>手術日期（可先留空，之後補填）</label><input type="date" id="f-cdate"></div>
+  <div class="field"><label>備註標籤（選填，例：hump + deviation；逗號分隔可供規則比對）</label><input type="text" id="f-clabel" autocomplete="off"></div>
+  <div class="dlgrow"><button type="button" class="btn" onclick="closeDlg('dlg-case')">取消</button>
+    <button type="button" class="btn pri" onclick="saveCase()">儲存</button></div>
+  <div class="dlgrow" id="dlgc-del" style="display:none"><button type="button" class="btn danger" onclick="deleteCase()">刪除此次手術（含照片）</button></div>
+</form></dialog>
+
+<dialog id="dlg-photos"><form class="dlg" method="dialog" onsubmit="return doAddPhotos(event)">
+  <h2>新增照片</h2>
+  <div class="field"><label>拍攝日期</label><input type="date" id="f-pdate" required></div>
+  <div class="field"><label>視角 VIEW</label><select id="f-pview"></select></div>
+  <div class="field"><label>照片（可多選；進庫時自動轉 JPEG、長邊 3000px、不變形）</label>
+    <input type="file" id="f-pfiles" accept="image/*" multiple required></div>
+  <div class="progress" id="addprog"></div>
+  <div class="dlgrow"><button type="button" class="btn" onclick="closeDlg('dlg-photos')">取消</button>
+    <button type="submit" class="btn pri">加入</button></div>
+</form></dialog>
+
+<dialog id="dlg-sketch"><form class="dlg" method="dialog" onsubmit="return doAddSketch(event)">
+  <h2>新增手繪</h2>
+  <div class="field"><label>底圖模板</label><select id="f-sktpl"></select></div>
+  <div class="field"><label>標題（選填）</label><input type="text" id="f-sktitle" autocomplete="off" placeholder="例：dorsum plan"></div>
+  <div class="dlgrow"><button type="button" class="btn" onclick="closeDlg('dlg-sketch')">取消</button>
+    <button type="submit" class="btn pri">建立</button></div>
+</form></dialog>
+
+<dialog id="dlg-target"><form class="dlg" method="dialog" onsubmit="return addTarget(event)">
+  <h2>新增量化預測目標</h2>
+  <p class="hint" style="margin:0 0 12px">選一個量測項目，設定術後目標值與容許範圍。回顧時系統會自動用術後照片的量測值比對命中與否。</p>
+  <div class="field"><label>量測項目</label><select id="f-tmetric"></select></div>
+  <div class="field"><label>目標值</label><input type="number" id="f-tval" step="0.1" inputmode="decimal" required></div>
+  <div class="field"><label>容許範圍 ±</label><input type="number" id="f-ttol" step="0.1" inputmode="decimal" value="5" required></div>
+  <div class="dlgrow"><button type="button" class="btn" onclick="closeDlg('dlg-target')">取消</button>
+    <button type="submit" class="btn pri">加入</button></div>
+</form></dialog>
+
+<dialog id="dlg-decision"><form class="dlg" method="dialog" onsubmit="return saveDecision(event)">
+  <h2 id="dlgd-h">決策紀錄</h2>
+  <div class="field"><label>主題（如 SEG vs columellar strut）</label><input type="text" id="f-dtopic" autocomplete="off" required></div>
+  <div class="field"><label>選擇了什麼</label><input type="text" id="f-dchosen" autocomplete="off"></div>
+  <div class="field"><label>排除的替代方案</label><input type="text" id="f-dalt" autocomplete="off"></div>
+  <div class="field"><label>理由 / 連結的檢查發現</label><textarea id="f-drat" rows="3"></textarea></div>
+  <div class="dlgrow"><button type="button" class="btn" onclick="closeDlg('dlg-decision')">取消</button>
+    <button type="submit" class="btn pri">儲存</button></div>
+</form></dialog>
+
+<dialog id="dlg-lesson"><form class="dlg" method="dialog" onsubmit="return saveLesson(event)">
+  <h2 id="dlgl-h">教訓 / Error</h2>
+  <div class="field"><label>類型</label><select id="f-ltype">
+    <option value="complication">併發症 Complication</option><option value="error">技術失誤 Error</option>
+    <option value="insight">洞察 Insight</option></select></div>
+  <div class="field"><label>描述</label><textarea id="f-ldesc" rows="2" required></textarea></div>
+  <div class="field"><label>根本原因（root cause）</label><textarea id="f-lroot" rows="2"></textarea></div>
+  <div class="field"><label>連結規則（選填）</label><select id="f-lrule"><option value="">— 無 —</option></select></div>
+  <div class="dlgrow"><button type="button" class="btn" onclick="closeDlg('dlg-lesson')">取消</button>
+    <button type="submit" class="btn pri">儲存</button></div>
+</form></dialog>
+
+<dialog id="dlg-rule"><form class="dlg" method="dialog" onsubmit="return saveRule(event)">
+  <h2 id="dlgr-h">經驗法則</h2>
+  <div class="field"><label>陳述（如：厚皮膚 → projection +0.5mm）</label><textarea id="f-rstmt" rows="2" required></textarea></div>
+  <div class="field"><label>狀態</label><select id="f-rstatus">
+    <option value="hypothesis">假設中 Hypothesis</option><option value="testing">驗證中 Testing</option>
+    <option value="established">已確立 Established</option><option value="refuted">已推翻 Refuted</option></select></div>
+  <div class="field"><label>觸發標籤（選填，逗號分隔；開 case 時比對標籤自動提示）</label><input type="text" id="f-rtags" autocomplete="off" placeholder="thick skin, revision"></div>
+  <div class="field"><label>備註</label><textarea id="f-rnotes" rows="2"></textarea></div>
+  <div class="dlgrow"><button type="button" class="btn" onclick="closeDlg('dlg-rule')">取消</button>
+    <button type="submit" class="btn pri">儲存</button></div>
+  <div class="dlgrow" id="dlgr-del" style="display:none"><button type="button" class="btn danger" onclick="deleteRule()">刪除規則</button></div>
+</form></dialog>
+
+<dialog id="dlg-review"><form class="dlg" method="dialog" onsubmit="return saveReview(event)">
+  <h2 id="dlgrv-h">新增回顧</h2>
+  <div class="field"><label>回顧日期（實際回診日）</label><input type="date" id="f-rvdate" required></div>
+  <p class="hint" style="margin:0">建立後系統會用此日期前後的術後照片量測值，自動比對你封存的量化預測。</p>
+  <div class="dlgrow"><button type="button" class="btn" onclick="closeDlg('dlg-review')">取消</button>
+    <button type="submit" class="btn pri">建立</button></div>
+</form></dialog>
+
+<dialog id="dlg-pass"><form class="dlg" method="dialog" onsubmit="return passSubmit(event)">
+  <h2 id="dlgpass-h">備份密碼</h2><p class="hint" id="dlgpass-p" style="margin:0 0 12px"></p>
+  <div class="field"><label>密碼 PASSPHRASE</label><input type="password" id="f-pass" autocomplete="off"></div>
+  <div class="dlgrow"><button type="button" class="btn" onclick="passCancel()">不加密</button>
+    <button type="submit" class="btn pri">確定</button></div>
+</form></dialog>
+
+<dialog id="dlg-confirm"><div class="dlg">
+  <h2 id="dlgcf-h">確認</h2>
+  <p id="dlgcf-p" style="font-size:14.5px;line-height:1.7;color:var(--steel);margin:0 0 6px;white-space:pre-line"></p>
+  <div class="dlgrow"><button type="button" class="btn" onclick="cfAnswer(false)">取消</button>
+    <button type="button" class="btn danger" id="dlgcf-ok" onclick="cfAnswer(true)">確定</button></div>
+</div></dialog>
+
+<div class="toast" id="toast"></div>
+<script>
+'use strict';
+/* ===== constants ===== */
+// analysis views (frontal + both laterals) ordered FIRST for prominence
+const VIEWS=[
+  {id:'frontal',label:'正面 Frontal',analysis:true},
+  {id:'lat-r',label:'右側面 Lateral R',analysis:true,lateral:true},
+  {id:'lat-l',label:'左側面 Lateral L',analysis:true,lateral:true},
+  {id:'oblique-r',label:'右斜位 Oblique R'},
+  {id:'oblique-l',label:'左斜位 Oblique L'},
+  {id:'basal',label:'基底 Basal'},
+  {id:'smile',label:'微笑 Smile'},
+  {id:'other',label:'其他 Other'},
+];
+const VIEW_LABEL=Object.fromEntries(VIEWS.map(v=>[v.id,v.label]));
+const isLateral=v=>!!(VIEWS.find(x=>x.id===v)||{}).lateral;
+const isFrontal=v=>v==='frontal';
+const isAnalysis=v=>!!(VIEWS.find(x=>x.id===v)||{}).analysis;
+
+// Lateral photometric landmarks (Rhinobase "Points to define" — profile)
+const LM_LATERAL=[
+  {k:'G',zh:'眉間',en:'Glabella'},{k:'N',zh:'鼻根',en:'Nasion'},
+  {k:'R',zh:'鼻脊點',en:'Rhinion'},{k:'ST',zh:'上鼻尖',en:'Supratip'},
+  {k:'T',zh:'鼻尖',en:'Tip'},{k:'AC',zh:'鼻翼溝',en:'Alar crease'},
+  {k:'ABJ',zh:'鼻翼基交',en:'Alar base jct'},{k:'Sn',zh:'鼻下點',en:'Subnasale'},
+  {k:'Cb',zh:'鼻小柱折點',en:'Columella break'},{k:'LS',zh:'上唇緣',en:'Labrale sup.'},
+  {k:'LI',zh:'下唇緣',en:'Labrale inf.'},{k:'Stm',zh:'口裂點',en:'Stomion'},
+  {k:'Sl',zh:'頦唇溝',en:'Mentolabial sul.'},{k:'Pg',zh:'頦前點',en:'Pogonion'},
+  {k:'Me',zh:'頦下點',en:'Menton'},{k:'Cv',zh:'頸點',en:'Cervical pt'},
+  {k:'Tr',zh:'耳屏點',en:'Tragion'},{k:'Or',zh:'眶下緣',en:'Infraorbital'},
+];
+// Frontal photometric landmarks (paired: R = 病人右 = 影像左)
+const LM_FRONTAL=[
+  {k:'Tri',zh:'髮際中',en:'Trichion'},{k:'G',zh:'眉間(中線)',en:'Glabella'},
+  {k:'N',zh:'鼻根',en:'Nasion'},{k:'R',zh:'鼻脊點',en:'Rhinion'},
+  {k:'S',zh:'上鼻尖',en:'Supratip'},{k:'T',zh:'鼻尖',en:'Tip'},
+  {k:'Sn',zh:'鼻下點',en:'Subnasale'},{k:'Stm',zh:'口裂點',en:'Stomion'},
+  {k:'Me',zh:'頦下點(中線)',en:'Menton'},
+  {k:'EnR',zh:'右內眥',en:'R endocanthus'},{k:'EnL',zh:'左內眥',en:'L endocanthus'},
+  {k:'WdR',zh:'右鼻背最寬',en:'R widest dorsum'},{k:'WdL',zh:'左鼻背最寬',en:'L widest dorsum'},
+  {k:'XR',zh:'右下鼻骨',en:'R lower bony'},{k:'XL',zh:'左下鼻骨',en:'L lower bony'},
+  {k:'AlR',zh:'右鼻翼',en:'R alar'},{k:'AlL',zh:'左鼻翼',en:'L alar'},
+];
+const LM_BY_VIEW={'lat-r':LM_LATERAL,'lat-l':LM_LATERAL,'frontal':LM_FRONTAL};
+const lmSet=v=>LM_BY_VIEW[v]||null;
+
+// reference ranges (default = classic/Caucasian literature; editable in settings; adjust for Asian norms)
+const DEFAULT_REFS={
+  nfr:[115,130],nfa:[30,40],ta:[95,110],nla:[90,120],nm:[120,132],mc:[80,95],
+  convex:[8,16],goode:[0.55,0.60],alarIC:[0.90,1.10],devAng:[0,3]};
+const REF_META=[
+  {key:'nfr',name:'Nasofrontal ∠',sub:'側 G–N–T',unit:'°'},
+  {key:'nfa',name:'Nasofacial ∠',sub:'側 G–Pg 線 vs N–T 線',unit:'°'},
+  {key:'ta',name:'Tip ∠',sub:'側 ST–T–Cb',unit:'°'},
+  {key:'nla',name:'Nasolabial ∠',sub:'側 Cb–Sn–LS',unit:'°'},
+  {key:'nm',name:'Nasomental ∠',sub:'側 N–T–Pg',unit:'°'},
+  {key:'mc',name:'Mentocervical ∠',sub:'側 G–Pg 線 vs Me–Cv 線',unit:'°'},
+  {key:'convex',name:'Facial convexity ∠',sub:'側 180−(G–Sn–Pg)',unit:'°'},
+  {key:'goode',name:'Goode ratio',sub:'側 ⊥(T→N–AC) ÷ N–T',unit:''},
+  {key:'alarIC',name:'鼻翼/內眥寬 比',sub:'正 interalar ÷ intercanthal',unit:''},
+  {key:'devAng',name:'中線偏移角上限',sub:'正 R/S/T 偏 G–Me 中線，超過即標記',unit:'°',oneSided:true},
+];
+
+const SKIN_DEFAULT='#E8B89B';
+const DRAW_COLORS=[{k:'ink',c:'#141B1F'},{k:'red',c:'#E23B2E'},{k:'blue',c:'#2563EB'},{k:'skin',c:SKIN_DEFAULT}];
+const DRAW_WIDTHS=[2,4,7];
+
+// sketch templates (drawn programmatically as underlays)
+const TEMPLATES=[
+  {id:'blank',name:'空白'},
+  {id:'lateral',name:'側面鼻骨架 Lateral'},
+  {id:'basal',name:'基底 Basal'},
+  {id:'septum',name:'鼻中膈 L-strut'},
+  {id:'osteotomy',name:'截骨路徑 Osteotomy'},
+];
+
+/* ---- Rhinobase aesthetic analysis (verbatim option sets) ---- */
+const AESTHETIC={
+  frontal:{title:'美學分析 — 正面 Frontal',rows:[
+    ['Face shape 臉型',['Oval','Round','Square','Diamond/pear']],
+    ['6/8 比例',['Proportional','Disproportional']],
+    ['Horizontal thirds 水平三分',['Proportional','Disproportional']],
+    ['Vertical fifths 垂直五分',['Proportional','Disproportional']],
+    ['Left brow-tip line 左',['Smooth','Irregular']],
+    ['Right brow-tip line 右',['Smooth','Irregular']],
+    ['Skin thickness 皮膚厚度',['Thin','Moderate','Thick']],
+    ['Sebaceous gland 皮脂腺',['Sparse','Moderate','Rich']],
+    ['Skin discoloration',['None','Present']],
+    ['Scar 疤痕',['None','Present']],
+    ['Deviation 偏斜',['Bony vault','Tip','Cartilagenous vault']],
+    ['Radix 鼻根',['Normal','Wide','Narrow']],
+    ['Bony vault 骨性拱',['Normal','Wide','Narrow']],
+    ['Cartilagenous vault 軟骨拱',['Normal','Wide','Narrow']],
+    ['Tip 鼻尖',['Normal','Wide','Narrow']],
+    ['Alar axis 鼻翼軸',['Divergent','Straight','Convergent']],
+    ['Alar size 鼻翼大小',['Normal','Wide','Narrow']],
+    ['Alar flare 鼻翼外張',['Normal','Excessive','Decreased']],
+    ['Infratip lobule',['Normal','Prominent','Recessed']],
+    ['Chin width 頦寬',['Normal','Wide','Narrow']],
+    ['Supraalar pinching',['Absent','Present']],
+    ['Tip bifidity 鼻尖分裂',['Absent','Present']],
+    ['Parenthesis deformity',['Absent','Present']],
+    ['Unitip deformity',['Absent','Present']],
+    ['Bulbosity 球狀',['Absent','Present']],
+    ['Cephalic malposition (lateral crura)',['Absent','Present']],
+  ]},
+  lateral:{title:'美學分析 — 側面 Lateral',rows:[
+    ['Facial contour 側臉輪廓',['Straight','Convex','Concave']],
+    ['Forehead 前額',['Flat','Protruding','Sloping']],
+    ['Occlusion 咬合',['Orthognathic','Retrognathic','Prognathic']],
+    ['Midface 中臉',['Normal','Retrognathic','Prognathic']],
+    ['Lowerface 下臉',['Normal','Retrognathic','Prognathic']],
+    ['Radix 鼻根深度',['Normal','Shallow','Deep']],
+    ['Nasal starting point 起點',['Normal','High','Low']],
+    ['Dorsum 鼻背',['Normal','Hump','Saddle']],
+    ['Nasal length 鼻長',['Normal','Short','Long']],
+    ['Nasal bones 鼻骨',['Normal','Short','Long']],
+    ['Upper lateral cartilage ULC',['Normal','Short','Long']],
+    ['Supratip',['Normal','Depressed','Prominent']],
+    ['Anterior septal angle',['Normal','Overdeveloped','Underdeveloped']],
+    ['Tip projection',['Normal','Underprojected','Overprojected']],
+    ['Tip rotation',['Normal','Underrotated','Overrotated']],
+    ['Columella 鼻小柱',['Normal','Hanging','Retracted']],
+    ['Double break',['Favorable','Accentuated','Poorly-defined']],
+    ['Alar rim',['Normal','Hanging','Retracted']],
+    ['Alar-facial relationship',['Normal','Hooded','Recessed']],
+    ['Nasolabial angle',['Normal','Acute','Obtuse']],
+    ['Upper lip orientation',['Normal','Retro-inclination','Forward-inclination']],
+    ['Upper lip length',['Normal','Short','Long']],
+    ['Nasal spine 鼻棘',['Normal','Short','Long']],
+    ['Mentolabial sulcus',['Deep','Normal','Shallow']],
+    ['Chin 頦',['Normal','Recessive','Prominent']],
+    ['Submental region 頦下',['Normal','Moderate fat deposit','Marked fat deposit']],
+  ]},
+  basal:{title:'美學分析 — 基底 Basal',rows:[
+    ['Shape 形狀',['Triangular','Trapezoidal','Boxy','Irregular']],
+    ['Deviation 偏斜',['Absent','Right','Left']],
+    ['Lobule',['Normal','Wide','Narrow']],
+    ['Columella/Lobule ratio',['Normal','Increased','Decreased']],
+    ['Columella 鼻小柱',['Normal','Short','Long']],
+    ['Caudal septal position',['Midline','Subluxation to left','Subluxation to right']],
+    ['Medial crural footplate flare',['Normal','Wide','Narrow']],
+    ['Columellar width',['Normal','Wide','Narrow']],
+    ['Columella scar',['Absent','Inverted-V','Stairstep','Straight']],
+    ['Nostril sill width',['Normal','Short','Long']],
+    ['Nostril floor width',['Normal','Depressed','Prominent']],
+    ['Alar flare',['Normal','Excessive','Narrow']],
+    ['Alar width',['Normal','Excessive','Narrow']],
+    ['Angle of divergence',['Normal','Wide','Narrow']],
+    ['Alarbase-nostril floor',['Cheek junction','Columellar junction','Labial junction']],
+    ['Nostril configuration',['Pear shaped','Round','Oval','Slit-like','Asymmetric']],
+    ['Nostril size',['Normal','Large','Small','Infantile']],
+  ]},
+};
+/* ---- Rhinobase operative planning ---- */
+const OPPLAN={title:'手術計畫 Operative Plan',groups:[
+  ['目標',[
+    ['Projection',['Do not disturb','Increase','Decrease'],0],
+    ['Rotation',['Do not disturb','Upward rotation','Downward rotation'],0],
+    ['Type of procedure',['Rhinoplasty','Septoplasty','Septorhinoplasty','Cleft lip-nose'],0],
+    ['Procedure',['Primary','Secondary','Revision'],0],
+  ]],
+  ['入路 Access',[
+    ['Incisions',['Killian','Hemitransfixion','Transfixion','Midcolumellar','Marginal','Intercartilagenous','Transcartilagenous','Rim'],1],
+    ['Approach',['Cartilage splitting','Intercartilagenous','Delivery','External','Marginal'],1],
+  ]],
+  ['中膈 Septum',[
+    ['Septum',['Undisturbed','SMR','Septoplasty','Spur excision','Caudal edge resection'],1],
+    ['Caudal edge resection',['Anterior','Middle','Posterior','Complete'],0],
+  ]],
+  ['鼻背 Dorsum',[
+    ['Dorsum',['Undisturbed','Augmentation','Reduction'],0],
+    ['Dorsum reduction',['Bone','Cartilage','Bone+Cartilage'],0],
+    ['Dorsum augmentation',['Cartilage','Bone','Alloplastic','Fascia','Scar tissue'],1],
+    ['Radix',['Reduction','Augmentation'],0],
+    ['Frontal view',['Do not disturb','Widening','Narrowing'],0],
+  ]],
+  ['鼻尖 Tip',[
+    ['Lateral crura',['Undisturbed','Cephalic trim','Vertical division','Overlap shortening','Caudal repositioning'],1],
+    ['Dome',['Transdomal suture','Domal suture','Vertical division','Segmental excision'],1],
+    ['Medial crura',['Caudal margin resection','Vertical segment resection','Footplate resection','Sutured to strut','Sutured to septum','Footplate narrowing suture'],1],
+    ['Intermediate crura',['Undisturbed','Sutured together'],0],
+  ]],
+  ['截骨 Osteotomy',[
+    ['Right osteotomies',['Medial','Lateral','Intermediate','Transverse'],1],
+    ['Left osteotomies',['Medial','Lateral','Intermediate','Transverse'],1],
+    ['Osteotomy route',['Transnasal','Intranasal'],0],
+    ['Osteotomy type',['Complete','Greenstick','Digital'],0],
+  ]],
+  ['移植物 Grafts',[
+    ['Grafts',['Shield','Columellar strut','Spreader graft','Lateral crural graft','Dorsal onlay graft','Alar batten graft','Radix graft','Plumping graft','Premaxillary graft','Caudal septal extension','L-Strut graft'],1],
+  ]],
+  ['其他 Other',[
+    ['Alar base',['Undisturbed','Type1 reduction','Type2 reduction','Type3 reduction'],0],
+    ['Miscellaneous',['Quilting suture','Division of depressor septi muscle','Vestibular skin resection'],1],
+    ['Turbinate surgery',['Partial resection','SMR','Turbinoplasty','Cauterization','RF','Fracture'],1],
+    ['Nasal packing',['None','Splints','Merocel','Surgicel','Gelfoam','Vaselin gauze'],1],
+    ['Other procedures',['None','Mentoplasty','Chin augmentation','Genioplasty','Blepharoplasty','Facelift'],1],
+  ]],
+]};
+
+const PRED_Q=['主要問題是什麼？','造成問題的解剖原因？','預測的最佳手術策略？','最擔心的併發症？','預測一年後結果？'];
+const REFL_Q=['哪一步最順利？','哪一步最困難？','哪個決策事後看最好？','哪個決策值得重新思考？','重做一次會改什麼？'];
+const REVIEW_Q=['哪些比預期好？','哪些比預期差？','原因假設？','修正了哪條經驗法則？'];
+
+const FORM_KINDS={
+  'aesthetic-frontal':{schema:'frontal',kind:'aesthetic-frontal'},
+  'aesthetic-lateral':{schema:'lateral',kind:'aesthetic-lateral'},
+  'aesthetic-basal':{schema:'basal',kind:'aesthetic-basal'},
+  'opplan':{kind:'opplan'},
+};
+
+/* ===== utils ===== */
+const $=id=>document.getElementById(id);
+const uid=()=>(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2,10));
+const today=()=>new Date().toISOString().slice(0,10);
+const nowISO=()=>new Date().toISOString();
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const te=s=>new TextEncoder().encode(s);
+const td=b=>new TextDecoder().decode(b);
+let toastT=null;
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2400);}
+function openDlg(id){$(id).showModal();}
+function closeDlg(id){$(id).close();}
+function confirmDlg(title,msg,ok){return new Promise(res=>{$('dlgcf-h').textContent=title;$('dlgcf-p').textContent=msg;$('dlgcf-ok').textContent=ok||'確定';window.__cf=res;openDlg('dlg-confirm');});}
+function cfAnswer(v){closeDlg('dlg-confirm');const r=window.__cf;window.__cf=null;r&&r(v);}
+const fmtDate=d=>d||'—';
+function daysBetween(a,b){return Math.round((new Date(a)-new Date(b))/86400000);}
+function stageOf(dateStr,surgeryDate){
+  if(!surgeryDate)return{cls:'pre',txt:dateStr,phase:'na',days:null};
+  const d=daysBetween(dateStr,surgeryDate);
+  if(d<0)return{cls:'pre',txt:`術前 ${-d} 天`,phase:'pre',days:d};
+  if(d===0)return{cls:'op',txt:'手術日',phase:'op',days:0};
+  const m=d/30.44;
+  return{cls:'post',txt:`術後 ${d} 天${d>=28?' ≈ '+(m<10?m.toFixed(1):Math.round(m))+' 個月':''}`,phase:'post',days:d};
+}
+function monthsSince(a,b){return daysBetween(a,b)/30.44;}
+
+/* ===== storage adapter ===== */
+const TABLES=['settings','patients','cases','photos','landmarks','drawings','sketches','forms','predictions','decisions','reflections','reviews','lessons','rules'];
+const KEYPATH={landmarks:'photoId',drawings:'photoId',predictions:'caseId',decisions:'caseId',reflections:'caseId'};
+const kp=t=>KEYPATH[t]||'id';
+let store=null;
+
+function idbWrap(db){
+  const os=(t,mode)=>db.transaction(t,mode).objectStore(t);
+  const req=r=>new Promise((res,rej)=>{r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});
+  return{kind:'idb',
+    put:(t,o)=>req(os(t,'readwrite').put(o)),
+    get:(t,k)=>req(os(t,'readonly').get(k)),
+    del:(t,k)=>req(os(t,'readwrite').delete(k)),
+    all:t=>req(os(t,'readonly').getAll()),
+    clear:t=>req(os(t,'readwrite').clear())};
+}
+function kvWrap(){
+  const key=(t,k)=>`${t}:${k}`;
+  const idOf=o=>o.id||o.photoId||o.caseId;
+  return{kind:'kv',
+    async put(t,o){await window.storage.set(key(t,idOf(o)),JSON.stringify(o));return idOf(o);},
+    async get(t,k){try{const r=await window.storage.get(key(t,k));return r?JSON.parse(r.value):undefined;}catch(e){return undefined;}},
+    async del(t,k){try{await window.storage.delete(key(t,k));}catch(e){}},
+    async all(t){try{const r=await window.storage.list(t+':');const out=[];for(const k of (r&&r.keys)||[]){try{const v=await window.storage.get(k);if(v)out.push(JSON.parse(v.value));}catch(e){}}return out;}catch(e){return[];}},
+    async clear(t){try{const r=await window.storage.list(t+':');for(const k of (r&&r.keys)||[])await window.storage.delete(k);}catch(e){}}};
+}
+function memWrap(){
+  const m={};TABLES.forEach(t=>m[t]=new Map());
+  const idOf=o=>o.id||o.photoId||o.caseId;
+  return{kind:'mem',
+    put:async(t,o)=>{m[t].set(idOf(o),o);},
+    get:async(t,k)=>m[t].get(k),
+    del:async(t,k)=>{m[t].delete(k);},
+    all:async t=>[...m[t].values()],
+    clear:async t=>{m[t].clear();}};
+}
+async function createStore(){
+  try{
+    const db=await new Promise((res,rej)=>{
+      let r;try{r=indexedDB.open('rhinocase-v1',2);}catch(e){return rej(e);}
+      const to=setTimeout(()=>rej(new Error('idb timeout')),4000);
+      r.onupgradeneeded=()=>{const d=r.result;for(const t of TABLES)if(!d.objectStoreNames.contains(t))d.createObjectStore(t,{keyPath:kp(t)});};
+      r.onsuccess=()=>{clearTimeout(to);res(r.result);};
+      r.onerror=()=>{clearTimeout(to);rej(r.error);};
+      r.onblocked=()=>{clearTimeout(to);rej(new Error('blocked'));};
+    });
+    const s=idbWrap(db);
+    await s.put('settings',{id:'__probe',t:Date.now()});await s.del('settings','__probe');
+    return s;
+  }catch(e){
+    if(window.storage&&window.storage.get){
+      try{const s=kvWrap();await s.put('settings',{id:'__probe'});await s.del('settings','__probe');return s;}catch(e2){}
+    }
+    $('storagebanner').style.display='block';
+    return memWrap();
+  }
+}
+// convenience
+const getRec=(t,k)=>store.get(t,k);
+const putRec=(t,o)=>store.put(t,o);
+const allRec=t=>store.all(t);
+async function delCascadePhoto(ph){
+  const u=thumbURL.get(ph.id);if(u){URL.revokeObjectURL(u);thumbURL.delete(ph.id);}
+  await store.del('photos',ph.id);await store.del('landmarks',ph.id);await store.del('drawings',ph.id);
+}
+
+/* ===== photo blob helpers ===== */
+function blobToDataURL(b){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(r.error);r.readAsDataURL(b);});}
+function dataURLToBlob(u){const[h,b]=u.split(',');const mime=(h.match(/data:(.*?);/)||[])[1]||'image/jpeg';const bin=atob(b);const a=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);return new Blob([a],{type:mime});}
+async function savePhotoRec(meta,blob){
+  const rec={...meta};
+  if(store.kind==='idb')rec.blob=blob;else rec.dataUrl=await blobToDataURL(blob);
+  await store.put('photos',rec);return rec;
+}
+async function getPhotoBlob(rec){return rec.blob?rec.blob:dataURLToBlob(rec.dataUrl);}
+
+async function decodeUpright(blobOrFile){
+  // prefer createImageBitmap with EXIF orientation applied -> upright pixels, correct w/h
+  try{return await createImageBitmap(blobOrFile,{imageOrientation:'from-image'});}
+  catch(e){
+    try{return await createImageBitmap(blobOrFile);}catch(e2){}
+    return await new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=()=>rej(new Error('無法讀取圖片'));im.src=URL.createObjectURL(blobOrFile);});
+  }
+}
+async function normalizeImage(file){
+  const src=await decodeUpright(file);
+  const w=src.width||src.naturalWidth,h=src.height||src.naturalHeight;
+  const k=Math.min(1,3000/Math.max(w,h));
+  const cw=Math.round(w*k),ch=Math.round(h*k);
+  const c=document.createElement('canvas');c.width=cw;c.height=ch;
+  const ctx=c.getContext('2d');ctx.imageSmoothingQuality='high';
+  ctx.drawImage(src,0,0,cw,ch);           // uniform scale -> never distorts
+  const blob=await new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(new Error('JPEG 轉檔失敗')),'image/jpeg',0.85));
+  if(src.close)src.close();
+  return{blob,w:cw,h:ch};
+}
+
+/* ===== geometry ===== */
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+function angleAt(B,A,C){const v1={x:A.x-B.x,y:A.y-B.y},v2={x:C.x-B.x,y:C.y-B.y};
+  const d=(v1.x*v2.x+v1.y*v2.y)/(Math.hypot(v1.x,v1.y)*Math.hypot(v2.x,v2.y));
+  return Math.acos(Math.min(1,Math.max(-1,d)))*180/Math.PI;}
+function lineAngle(A1,A2,B1,B2){const a=Math.atan2(A2.y-A1.y,A2.x-A1.x),b=Math.atan2(B2.y-B1.y,B2.x-B1.x);
+  let d=Math.abs(a-b)*180/Math.PI;d=d%180;if(d>90)d=180-d;return d;}
+function perpDist(P,L1,L2){const dx=L2.x-L1.x,dy=L2.y-L1.y,len=Math.hypot(dx,dy);if(!len)return 0;
+  return Math.abs(dy*P.x-dx*P.y+L2.x*L1.y-L2.y*L1.x)/len;}
+// signed horizontal offset of P from line(A,B) at P's height; +x = image right
+function horizOffset(P,A,B){
+  if(Math.abs(B.y-A.y)<1e-6)return P.x-(A.x+B.x)/2;
+  const ax=A.x+(B.x-A.x)*(P.y-A.y)/(B.y-A.y);
+  return P.x-ax;
+}
+// angle between directed vectors (B-A) and (D-C) in [0,180]
+function vecAngle(A,B,C,D){const v1={x:B.x-A.x,y:B.y-A.y},v2={x:D.x-C.x,y:D.y-C.y};
+  const m=Math.hypot(v1.x,v1.y)*Math.hypot(v2.x,v2.y);if(!m)return null;
+  return Math.acos(Math.min(1,Math.max(-1,(v1.x*v2.x+v1.y*v2.y)/m)))*180/Math.PI;}
+function computeLateral(pts,pxPerMm,refs){
+  const has=(...ks)=>ks.every(k=>pts[k]);const mm=px=>pxPerMm?px/pxPerMm:null;const cal=!!pxPerMm;const out=[];
+  const D=(k,name,px,ref)=>out.push({key:k,name,val:px==null?null:(cal?px/pxPerMm:px),unit:cal?'mm':'px',dec:cal?1:0,ref});
+  const A=(k,name,val,ref)=>out.push({key:k,name,val,unit:'°',dec:1,ref});
+  // angles
+  A('nfr','Nasofrontal ∠',has('G','N','T')?angleAt(pts.N,pts.G,pts.T):null,refs.nfr);
+  A('nfa','Nasofacial ∠',has('G','Pg','N','T')?lineAngle(pts.G,pts.Pg,pts.N,pts.T):null,refs.nfa);
+  A('ta','Tip ∠',has('ST','T','Cb')?angleAt(pts.T,pts.ST,pts.Cb):null,refs.ta);
+  A('nla','Nasolabial ∠',has('Cb','Sn','LS')?angleAt(pts.Sn,pts.Cb,pts.LS):null,refs.nla);
+  A('nm','Nasomental ∠',has('N','T','Pg')?angleAt(pts.T,pts.N,pts.Pg):null,refs.nm);
+  A('mc','Mentocervical ∠',has('G','Pg','Me','Cv')?vecAngle(pts.G,pts.Pg,pts.Me,pts.Cv):null,refs.mc);
+  A('convex','Facial convexity ∠',has('G','Sn','Pg')?180-angleAt(pts.Sn,pts.G,pts.Pg):null,refs.convex);
+  // nasal length + tip projection (Goode)
+  const nlen=has('N','T')?dist(pts.N,pts.T):null;
+  D('nt','鼻長 N–T',nlen);
+  let tipPx=null,goode=null;
+  if(has('N','AC','T')&&nlen){tipPx=perpDist(pts.T,pts.N,pts.AC);goode=tipPx/nlen;}
+  out.push({key:'goode',name:'Goode ratio',val:goode,unit:'',dec:2,ref:refs.goode});
+  // tip projection mm with dynamic ideal 0.55–0.60×NT
+  const tipRef=(cal&&nlen)?[0.55*nlen/pxPerMm,0.60*nlen/pxPerMm]:null;
+  D('tipproj','Tip proj ⊥(N–AC)',tipPx,tipRef);
+  D('col','Columella Sn–Cb',has('Sn','Cb')?dist(pts.Sn,pts.Cb):null);
+  D('infra','Infralobule Cb–T',has('Cb','T')?dist(pts.Cb,pts.T):null);
+  D('premx','Premaxilla ABJ–Sn',has('ABJ','Sn')?dist(pts.ABJ,pts.Sn):null);
+  return out;
+}
+function computeFrontal(pts,pxPerMm,refs){
+  const has=(...ks)=>ks.every(k=>pts[k]);const cal=!!pxPerMm;const out=[];
+  const D=(k,name,px,ref)=>out.push({key:k,name,val:px==null?null:(cal?px/pxPerMm:px),unit:cal?'mm':'px',dec:cal?1:0,ref});
+  D('ufh','上臉高 Tri–G',has('Tri','G')?dist(pts.Tri,pts.G):null);
+  D('mfh','中臉高 G–Sn',has('G','Sn')?dist(pts.G,pts.Sn):null);
+  D('lfh','下臉高 Sn–Me',has('Sn','Me')?dist(pts.Sn,pts.Me):null);
+  D('ull','上唇長 Sn–Stm',has('Sn','Stm')?dist(pts.Sn,pts.Stm):null);
+  D('chinv','頦垂直 Stm–Me',has('Stm','Me')?dist(pts.Stm,pts.Me):null);
+  const basew=has('XR','XL')?dist(pts.XR,pts.XL):null;D('basew','骨基寬 X–X',basew);
+  const icd=has('EnR','EnL')?dist(pts.EnR,pts.EnL):null;D('icd','內眥寬 EN–EN',icd);
+  D('dorw','鼻背寬 WD–WD',has('WdR','WdL')?dist(pts.WdR,pts.WdL):null);
+  const alw=has('AlR','AlL')?dist(pts.AlR,pts.AlL):null;D('alw','鼻翼寬 AL–AL',alw);
+  const nlen=has('N','T')?dist(pts.N,pts.T):null;D('nt','鼻長 N–T',nlen);
+  out.push({key:'alarIC',name:'鼻翼/內眥 比',val:(icd&&alw)?alw/icd:null,unit:'',dec:2,ref:refs.alarIC});
+  out.push({key:'alarNT',name:'(AL-AL)/(N-T)',val:(alw&&nlen)?alw/nlen:null,unit:'',dec:2,ref:null});
+  // deviation angles of R / S / T from G–Me midline, apex at N
+  const devAng=(P)=>{if(!has('G','Me','N')||!pts[P])return null;
+    const ang=vecAngle(pts.N,pts[P],pts.G,pts.Me);if(ang==null)return null;
+    const off=horizOffset(pts[P],pts.G,pts.Me);return{val:Math.abs(ang>90?180-ang:ang),signed:off};};
+  for(const[k,label,P] of [['devR','鼻脊偏中線 ∠','R'],['devS','上鼻尖偏中線 ∠','S'],['devT','鼻尖偏中線 ∠','T']]){
+    const d=devAng(P);
+    out.push({key:k,name:label,val:d?d.val:null,unit:'°',dec:1,ref:refs.devAng,oneSided:true,extra:d?{signed:d.signed}:null});}
+  return out;
+}
+function computeMeasures(view,pts,pxPerMm,refs){
+  if(isLateral(view))return computeLateral(pts,pxPerMm,refs);
+  if(isFrontal(view))return computeFrontal(pts,pxPerMm,refs);
+  return[];
+}
+// metric registry for prediction targets (metric -> {label, view, key})
+function metricCatalog(){
+  return[
+    {id:'lat.nfr',label:'Nasofrontal ∠ (°)',view:'lat-r',key:'nfr'},
+    {id:'lat.nfa',label:'Nasofacial ∠ (°)',view:'lat-r',key:'nfa'},
+    {id:'lat.nla',label:'Nasolabial ∠ (°)',view:'lat-r',key:'nla'},
+    {id:'lat.nm',label:'Nasomental ∠ (°)',view:'lat-r',key:'nm'},
+    {id:'lat.goode',label:'Goode ratio',view:'lat-r',key:'goode'},
+    {id:'lat.tipproj',label:'Tip projection ⊥ (mm)',view:'lat-r',key:'tipproj'},
+    {id:'lat.nt',label:'鼻長 N–T (mm)',view:'lat-r',key:'nt'},
+    {id:'fr.icd',label:'內眥距 (mm)',view:'frontal',key:'icd'},
+    {id:'fr.alw',label:'鼻翼寬 (mm)',view:'frontal',key:'alw'},
+    {id:'fr.alarIC',label:'鼻翼/內眥 比',view:'frontal',key:'alarIC'},
+    {id:'fr.devT',label:'鼻尖偏中線 ∠ (°)',view:'frontal',key:'devT'},
+  ];
+}
+const metricById=id=>metricCatalog().find(m=>m.id===id);
+
+/* ===== settings state ===== */
+let refs={...DEFAULT_REFS};
+let skinColor=SKIN_DEFAULT;
+async function loadSettings(){
+  const r=await store.get('settings','refs');if(r&&r.v)refs={...DEFAULT_REFS,...r.v};
+  const s=await store.get('settings','skin');if(s&&s.v)skinColor=s.v;
+  DRAW_COLORS[3].c=skinColor;
+}
+async function persistRefs(){await store.put('settings',{id:'refs',v:refs});}
+async function persistSkin(){await store.put('settings',{id:'skin',v:skinColor});}
+
+/* ===== router ===== */
+const cur={patient:null,kase:null,photo:null,sketch:null};
+function go(h){if(location.hash===h)route();else location.hash=h;}
+window.addEventListener('hashchange',route);
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');window.scrollTo(0,0);}
+async function route(){
+  if(cur.photo)await leavePhoto();
+  if(cur.sketch)await leaveSketch();
+  const h=location.hash||'#home';
+  const seg=h.slice(1).split('/'); // e.g. ['c','id'] or ['form','cid','kind']
+  const head=seg[0];
+  try{
+    if(head==='p'){cur.patient=await getRec('patients',seg[1]);if(!cur.patient)return go('#home');showScreen('scr-patient');renderPatient();}
+    else if(head==='c'){cur.kase=await getRec('cases',seg[1]);if(!cur.kase)return go('#home');cur.patient=await getRec('patients',cur.kase.patientId);showScreen('scr-case');renderCase();}
+    else if(head==='ph'){const ph=await getRec('photos',seg[1]);if(!ph)return go('#home');cur.photo=ph;cur.kase=await getRec('cases',ph.caseId);showScreen('scr-photo');await enterPhoto();}
+    else if(head==='sk'){const sk=await getRec('sketches',seg[1]);if(!sk)return go('#home');cur.sketch=sk;cur.kase=await getRec('cases',sk.caseId);showScreen('scr-sketch');await enterSketch();}
+    else if(head==='form'){cur.kase=await getRec('cases',seg[1]);if(!cur.kase)return go('#home');showScreen('scr-form');await renderForm(seg[2]);}
+    else if(head==='learn'){cur.kase=await getRec('cases',seg[1]);if(!cur.kase)return go('#home');showScreen('scr-learn');await renderLearn();}
+    else if(head==='compare'){cur.kase=await getRec('cases',seg[1]);if(!cur.kase)return go('#home');showScreen('scr-compare');await renderCompare();}
+    else if(head==='rules'){showScreen('scr-rules');renderRules();}
+    else if(head==='stats'){showScreen('scr-stats');renderStats();}
+    else if(head==='settings'){showScreen('scr-settings');renderSettings();}
+    else{showScreen('scr-home');renderHome();}
+  }catch(e){toast('載入失敗：'+e.message);go('#home');}
+}
+
+/* ===== thumbnails ===== */
+const thumbURL=new Map();
+async function urlFor(rec){
+  if(rec.dataUrl)return rec.dataUrl;
+  if(thumbURL.has(rec.id))return thumbURL.get(rec.id);
+  const u=URL.createObjectURL(rec.blob);thumbURL.set(rec.id,u);return u;
+}
+
+/* ===== HOME ===== */
+async function renderHome(){
+  const q=($('q').value||'').trim().toLowerCase();
+  const[pts,cases,photos]=await Promise.all([allRec('patients'),allRec('cases'),allRec('photos')]);
+  const cc={},pc={};
+  cases.forEach(c=>cc[c.patientId]=(cc[c.patientId]||0)+1);
+  photos.forEach(p=>{const c=cases.find(x=>x.id===p.caseId);if(c)pc[c.patientId]=(pc[c.patientId]||0)+1;});
+  // newest case per patient → tapping a patient opens that case's function menu directly
+  const newest={};cases.slice().sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||'')).forEach(c=>{newest[c.patientId]=c.id;});
+  let list=pts.sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||''));
+  if(q)list=list.filter(p=>(p.chartNo||'').toLowerCase().includes(q)||(p.alias||'').toLowerCase().includes(q));
+  const el=$('patientlist');
+  if(!list.length){el.innerHTML=`<div class="empty">${q?'找不到符合的病人':'尚無病人。<br>點右下 ＋ 建立第一筆病歷。'}</div>`;return;}
+  el.innerHTML=list.map(p=>{const dest=newest[p.id]?`#c/${newest[p.id]}`:`#p/${p.id}`;
+    return`<button class="card" onclick="go('${dest}')"><div class="main">
+    <div class="t">${esc(p.alias||p.chartNo)}</div>
+    <div class="d">${esc(p.chartNo)} · ${cc[p.id]||0} 次手術 · ${pc[p.id]||0} 張照片</div>
+    </div><span class="chev">›</span></button>`;}).join('');
+}
+
+/* ===== PATIENT ===== */
+async function renderPatient(){
+  const p=cur.patient;
+  $('pt-title').innerHTML=`${esc(p.alias||p.chartNo)}<span class="sub">${esc(p.chartNo)}</span>`;
+  const cases=(await allRec('cases')).filter(c=>c.patientId===p.id).sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
+  const photos=await allRec('photos');
+  const el=$('caselist');
+  if(!cases.length){el.innerHTML=`<div class="empty">尚無手術。<br>點右下 ＋ 新增手術（手術日可先留空）。</div>`;return;}
+  const tmap={primary:'PRIMARY',revision:'REVISION',septo:'SEPTO'};
+  el.innerHTML=cases.map(c=>{
+    const n=photos.filter(x=>x.caseId===c.id).length;
+    return `<button class="card" onclick="go('#c/${c.id}')"><div class="main">
+      <div class="t"><span class="badge ${c.type==='revision'?'mark':'acc'}">${tmap[c.type]||c.type}</span>${esc(c.label||'手術')}</div>
+      <div class="d">手術日 ${fmtDate(c.surgeryDate)} · ${n} 張照片</div>
+      </div><span class="chev">›</span></button>`;
+  }).join('');
+}
+
+/* ===== CASE HUB ===== */
+async function renderCase(){
+  const c=cur.kase;
+  $('cs-title').innerHTML=`${esc(cur.patient.alias||cur.patient.chartNo)} · ${esc(c.label||'手術')}<span class="sub">手術日 ${fmtDate(c.surgeryDate)}${c.surgeryDate?'':'（未設定，標籤以日期顯示）'}</span>`;
+  // active testing-rule prompt matching this case's tags
+  const rules=await allRec('rules');
+  const tags=(c.label||'').toLowerCase();
+  const matched=rules.filter(r=>r.status==='testing'&&(r.tags||[]).some(t=>t&&tags.includes(t.toLowerCase()))&&!(r.appliedCases||[]).includes(c.id));
+  const testing=rules.filter(r=>r.status==='testing'&&!(r.appliedCases||[]).includes(c.id));
+  const promptRules=matched.length?matched:testing;
+  const rn=$('rulenote');
+  if(promptRules.length){
+    const r=promptRules[0];
+    rn.innerHTML=`<div class="notebar"><div>你有一條${matched.length?'<b>條件相符的</b>':''}驗證中規則：<b>${esc(r.statement)}</b>。本次手術適用嗎？</div>
+      <button class="btn small pri b" onclick="applyRuleToCase('${r.id}')">套用</button></div>`;
+  }else rn.innerHTML='';
+  // module grid
+  const[photos,forms,pred,dec,refl,revs,less,sks]=await Promise.all([
+    allRec('photos'),allRec('forms'),getRec('predictions',c.id),getRec('decisions',c.id),
+    getRec('reflections',c.id),allRec('reviews'),allRec('lessons'),allRec('sketches')]);
+  const nPhotos=photos.filter(p=>p.caseId===c.id).length;
+  const fkinds=new Set(forms.filter(f=>f.caseId===c.id&&countForm(f)).map(f=>f.kind));
+  const aesN=['aesthetic-frontal','aesthetic-lateral','aesthetic-basal'].filter(k=>fkinds.has(k)).length;
+  const nDec=(dec&&dec.entries||[]).length, nRev=revs.filter(r=>r.caseId===c.id).length, nLess=less.filter(l=>l.caseId===c.id).length;
+  const nSk=sks.filter(s=>s.caseId===c.id).length;
+  const predState=pred?(pred.lockedAt?'已封存':'草稿'):'未填';
+  const reflState=refl&&Object.values(refl.answers||{}).some(v=>v&&v.trim())?'已填':'未填';
+  const done=v=>v&&v!=='未填'&&v!=='草稿';
+  // case switcher (sibling cases of this patient) + new case + patient menu
+  const sibs=(await allRec('cases')).filter(x=>x.patientId===cur.patient.id).sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
+  const tmap={primary:'Primary',revision:'Revision',septo:'Septo'};
+  const switcher=`<div style="grid-column:1/-1"><div class="chips" style="padding-bottom:2px">`+
+    sibs.map(s=>`<button class="mchip" style="min-width:auto;${s.id===c.id?'border-color:var(--accent);background:var(--accent-soft)':'background:var(--card)'}" onclick="go('#c/${s.id}')">
+      <div class="k" style="color:var(--steel)">${tmap[s.type]||s.type}</div>
+      <div class="val" style="font-size:14px;color:var(--ink)">${esc(s.label||'手術')}</div></button>`).join('')+
+    `<button class="mchip" style="min-width:auto;background:var(--card)" onclick="dlgCase()"><div class="k">＋</div><div class="val" style="font-size:14px">新增手術</div></button>
+     <button class="mchip" style="min-width:auto;background:var(--card)" onclick="go('#p/${cur.patient.id}')"><div class="k">病人</div><div class="val" style="font-size:14px">全部/編輯</div></button>
+     </div></div>`;
+  $('casemods').innerHTML=switcher+`
+    <button class="mod" onclick="go('#form/${c.id}/aesthetic-frontal')"><div class="mt">美學分析</div><div class="md ${aesN?'done':''}">${aesN}/3 視角</div></button>
+    <button class="mod" onclick="go('#form/${c.id}/opplan')"><div class="mt">手術計畫</div><div class="md ${fkinds.has('opplan')?'done':''}">${fkinds.has('opplan')?'已填':'未填'}</div></button>
+    <button class="mod" onclick="go('#learn/${c.id}')"><div class="mt">術前預測</div><div class="md ${pred&&pred.lockedAt?'done':''}">${predState}${pred&&pred.targets&&pred.targets.length?' · '+pred.targets.length+' 目標':''}</div></button>
+    <button class="mod" onclick="go('#learn/${c.id}')"><div class="mt">決策紀錄</div><div class="md ${nDec?'done':''}">${nDec} 筆</div></button>
+    <button class="mod" onclick="go('#learn/${c.id}')"><div class="mt">術後反思</div><div class="md ${done(reflState)?'done':''}">${reflState}</div></button>
+    <button class="mod" onclick="go('#learn/${c.id}')"><div class="mt">回顧 Review</div><div class="md ${nRev?'done':''}">${nRev} 次</div></button>
+    <button class="mod" onclick="go('#learn/${c.id}')"><div class="mt">教訓 Error</div><div class="md ${nLess?'done':''}">${nLess} 筆</div></button>
+    <button class="mod" onclick="go('#compare/${c.id}')"><div class="mt">疊圖比對</div><div class="md">術前/術後</div></button>
+    <button class="mod wide" onclick="openSketchList()"><div class="mt">手繪 / 圖示 Sketch</div><div class="md ${nSk?'done':''}">${nSk} 張 · 側面/basal/L-strut/截骨模板</div></button>`;
+  // photo timeline
+  await renderPhotoTimeline(c);
+}
+async function renderPhotoTimeline(c){
+  const photos=(await allRec('photos')).filter(p=>p.caseId===c.id);
+  const el=$('phototimeline');
+  if(!photos.length){el.innerHTML=`<div class="empty">尚無照片。<br>優先加入 <b>正面</b> 與 <b>左右側面</b>（可標點分析），以及含尺規側面照。</div>`;return;}
+  const dwg=await allRec('drawings');const dset=new Set(dwg.filter(d=>(d.strokes||[]).length).map(d=>d.photoId));
+  const groups={};photos.forEach(p=>{(groups[p.date]=groups[p.date]||[]).push(p);});
+  const dates=Object.keys(groups).sort().reverse();
+  let html='';
+  for(const d of dates){
+    const st=stageOf(d,c.surgeryDate);
+    const arr=groups[d].sort((a,b)=>VIEWS.findIndex(v=>v.id===a.view)-VIEWS.findIndex(v=>v.id===b.view));
+    const cells=[];
+    for(const p of arr){
+      const u=await urlFor(p);
+      cells.push(`<button class="thumb" onclick="go('#ph/${p.id}')"><img src="${u}" alt="" loading="lazy">
+        <span class="v">${esc(VIEW_LABEL[p.view]||p.view)}</span>
+        ${isAnalysis(p.view)?'<span class="an">標點</span>':''}
+        ${p.pxPerMm?'<span class="cal"></span>':''}${dset.has(p.id)?'<span class="dw"></span>':''}</button>`);
+    }
+    html+=`<div class="dgroup"><div class="dlabel"><span class="stage ${st.cls}">${st.txt}</span><span class="date">${d}</span></div>
+      <div class="thumbs">${cells.join('')}</div></div>`;
+  }
+  el.innerHTML=html;
+}
+function countForm(f){const d=f.data||{};return Object.values(d).some(v=>Array.isArray(v)?v.length:v);}
+
+/* ===== CRUD: patient ===== */
+let editingPatient=null;
+function dlgPatient(p){editingPatient=p||null;
+  $('dlgp-h').textContent=p?'編輯病人':'新增病人';
+  $('f-chart').value=p?p.chartNo:'';$('f-alias').value=p?(p.alias||''):'';
+  $('dlgp-del').style.display=p?'flex':'none';openDlg('dlg-patient');}
+async function savePatient(ev){if(ev)ev.preventDefault();
+  const chartNo=$('f-chart').value.trim(),alias=$('f-alias').value.trim();
+  if(!chartNo&&!alias){toast('請至少填病歷號或別名');$('f-chart').focus();return false;}
+  try{
+    if(editingPatient){Object.assign(editingPatient,{chartNo,alias,updatedAt:nowISO()});
+      await putRec('patients',editingPatient);cur.patient=editingPatient;closeDlg('dlg-patient');renderPatient();toast('已更新');}
+    else{const p={id:uid(),chartNo,alias,createdAt:nowISO(),updatedAt:nowISO()};
+      await putRec('patients',p);closeDlg('dlg-patient');go('#p/'+p.id);toast('已建立病人');}
+  }catch(e){toast('儲存失敗：'+e.message);}
+  return false;}
+async function deletePatient(){const p=editingPatient;if(!p)return;
+  const cases=(await allRec('cases')).filter(c=>c.patientId===p.id);
+  const photos=(await allRec('photos')).filter(ph=>cases.some(c=>c.id===ph.caseId));
+  if(!await confirmDlg('刪除病人',`將刪除「${p.alias||p.chartNo}」及其 ${cases.length} 次手術、${photos.length} 張照片與全部紀錄。無法復原。`,'刪除'))return;
+  for(const ph of photos)await delCascadePhoto(ph);
+  for(const c of cases){await store.del('cases',c.id);await store.del('predictions',c.id);await store.del('decisions',c.id);await store.del('reflections',c.id);}
+  for(const f of (await allRec('forms')))if(cases.some(c=>c.id===f.caseId))await store.del('forms',f.id);
+  for(const r of (await allRec('reviews')))if(cases.some(c=>c.id===r.caseId))await store.del('reviews',r.id);
+  for(const l of (await allRec('lessons')))if(cases.some(c=>c.id===l.caseId))await store.del('lessons',l.id);
+  for(const s of (await allRec('sketches')))if(cases.some(c=>c.id===s.caseId))await store.del('sketches',s.id);
+  await store.del('patients',p.id);closeDlg('dlg-patient');go('#home');toast('已刪除');}
+
+/* ===== CRUD: case ===== */
+let editingCase=null;
+function dlgCase(c){editingCase=c||null;
+  $('dlgc-h').textContent=c?'編輯手術':'新增手術';
+  $('f-ctype').value=c?c.type:'primary';$('f-cdate').value=c?(c.surgeryDate||''):'';$('f-clabel').value=c?(c.label||''):'';
+  $('dlgc-del').style.display=c?'flex':'none';openDlg('dlg-case');}
+async function saveCase(ev){if(ev)ev.preventDefault();
+  if(!cur.patient){toast('請先選病人');return false;}
+  const vals={type:$('f-ctype').value,surgeryDate:$('f-cdate').value||null,label:$('f-clabel').value.trim()};
+  try{
+    if(editingCase){Object.assign(editingCase,vals,{updatedAt:nowISO()});await putRec('cases',editingCase);cur.kase=editingCase;
+      closeDlg('dlg-case');renderCase();toast('已更新');}
+    else{const c={id:uid(),patientId:cur.patient.id,...vals,status:'open',createdAt:nowISO(),updatedAt:nowISO()};
+      await putRec('cases',c);closeDlg('dlg-case');go('#c/'+c.id);toast('已建立手術');}
+  }catch(e){toast('儲存失敗：'+e.message);}
+  return false;}
+async function deleteCase(){const c=editingCase;if(!c)return;
+  const photos=(await allRec('photos')).filter(p=>p.caseId===c.id);
+  if(!await confirmDlg('刪除手術',`將刪除此次手術及其 ${photos.length} 張照片、量測、表單與學習紀錄。無法復原。`,'刪除'))return;
+  for(const ph of photos)await delCascadePhoto(ph);
+  await store.del('cases',c.id);await store.del('predictions',c.id);await store.del('decisions',c.id);await store.del('reflections',c.id);
+  for(const f of (await allRec('forms')))if(f.caseId===c.id)await store.del('forms',f.id);
+  for(const r of (await allRec('reviews')))if(r.caseId===c.id)await store.del('reviews',r.id);
+  for(const l of (await allRec('lessons')))if(l.caseId===c.id)await store.del('lessons',l.id);
+  for(const s of (await allRec('sketches')))if(s.caseId===c.id)await store.del('sketches',s.id);
+  closeDlg('dlg-case');go('#p/'+c.patientId);toast('已刪除');}
+
+/* ===== add photos ===== */
+function dlgAddPhotos(){$('f-pdate').value=today();
+  $('f-pview').innerHTML=VIEWS.map(v=>`<option value="${v.id}">${v.label}${v.analysis?' ★可標點':''}</option>`).join('');
+  $('addprog').textContent='';openDlg('dlg-photos');}
+async function doAddPhotos(ev){ev.preventDefault();
+  const files=[...$('f-pfiles').files];if(!files.length)return false;
+  const date=$('f-pdate').value,view=$('f-pview').value,prog=$('addprog');let n=0;
+  for(const f of files){prog.textContent=`處理中 ${++n}/${files.length}…`;
+    try{const{blob,w,h}=await normalizeImage(f);
+      await savePhotoRec({id:uid(),caseId:cur.kase.id,date,view,w,h,pxPerMm:null,createdAt:nowISO()},blob);}
+    catch(e){toast('有照片處理失敗：'+e.message);}}
+  prog.textContent='';$('f-pfiles').value='';closeDlg('dlg-photos');renderCase();toast(`已加入 ${n} 張照片`);return false;}
+
+/* ===== sketch list / add ===== */
+async function openSketchList(){
+  const sks=(await allRec('sketches')).filter(s=>s.caseId===cur.kase.id).sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
+  let msg=sks.length?sks.map((s,i)=>`${i+1}. ${s.title||'(未命名)'} · ${TEMPLATES.find(t=>t.id===s.template)?.name||s.template}`).join('\n'):'（尚無手繪）';
+  // simple: open a chooser via confirm-style is limited; use a lightweight dialog
+  const box=$('dlg-sketch');
+  $('f-sktpl').innerHTML=TEMPLATES.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+  $('f-sktitle').value='';
+  // show existing list inside dialog title area is not ideal; instead route to a picker screen via prompt list
+  // We render a quick list screen inline using the learn screen pattern is overkill; open add dialog + toast list
+  if(sks.length){
+    // build a temporary list UI in the case screen is complex; open first-class: render into a transient overlay
+    showSketchPicker(sks);
+  }else{openDlg('dlg-sketch');}
+}
+function showSketchPicker(sks){
+  // reuse compare screen container? Simpler: use a confirm dialog listing + a create button
+  const html=sks.map(s=>`<button class="card" onclick="closeDlg('dlg-pick');go('#sk/${s.id}')"><div class="main">
+    <div class="t">${esc(s.title||'(未命名)')}</div><div class="d">${TEMPLATES.find(t=>t.id===s.template)?.name||s.template} · ${(s.strokes||[]).length} 筆</div>
+    </div><span class="chev">›</span></button>`).join('');
+  let dlg=$('dlg-pick');
+  if(!dlg){dlg=document.createElement('dialog');dlg.id='dlg-pick';dlg.innerHTML='<div class="dlg"><h2>手繪 / 圖示</h2><div id="pick-list" class="list" style="margin-bottom:14px"></div><div class="dlgrow"><button type="button" class="btn" onclick="closeDlg(\'dlg-pick\')">關閉</button><button type="button" class="btn pri" onclick="closeDlg(\'dlg-pick\');openDlg(\'dlg-sketch\')">＋ 新增</button></div></div>';document.body.appendChild(dlg);}
+  $('pick-list').innerHTML=html;openDlg('dlg-pick');
+}
+async function doAddSketch(ev){ev.preventDefault();
+  const s={id:uid(),caseId:cur.kase.id,template:$('f-sktpl').value,title:$('f-sktitle').value.trim(),strokes:[],createdAt:nowISO()};
+  await putRec('sketches',s);closeDlg('dlg-sketch');go('#sk/'+s.id);return false;}
+async function deleteSketch(){const s=cur.sketch;if(!s)return;
+  if(!await confirmDlg('刪除手繪','將刪除此手繪。無法復原。','刪除'))return;
+  await store.del('sketches',s.id);cur.sketch=null;if(SK.img&&SK.img.close)SK.img.close();SK.img=null;toast('已刪除');history.back();}
+
+/* ===================================================================
+   PHOTO CANVAS ENGINE  (view / cal / mark / free / draw)
+   =================================================================== */
+const PV={img:null,iw:0,ih:0,s:1,tx:0,ty:0,fit:1,cw:0,ch:0,dpr:1,
+  mode:'view',lms:{},activeLm:null,calPts:[],freePts:[],
+  pointers:new Map(),pinch:null,drag:null,down:null,moved:false,lastTap:0,
+  dirty:false,saveT:null,
+  strokes:[],curStroke:null,undo:[],redo:[],drawDirty:false,drawSaveT:null,
+  color:'#141B1F',width:4,eraser:false,penOnly:true,lmVis:true,aes:null,aesRows:null};
+const AES_SCHEMA={frontal:'frontal','lat-r':'lateral','lat-l':'lateral',basal:'basal'};
+const cv=$('cv'),cwrap=cv.parentElement;
+
+function resizeCV(){const r=cwrap.getBoundingClientRect();
+  PV.dpr=Math.min(window.devicePixelRatio||1,3);PV.cw=r.width;PV.ch=r.height;
+  cv.width=Math.round(r.width*PV.dpr);cv.height=Math.round(r.height*PV.dpr);}
+function fitView(){PV.fit=Math.min(PV.cw/PV.iw,PV.ch/PV.ih)*0.97;PV.s=PV.fit;
+  PV.tx=(PV.cw-PV.iw*PV.s)/2;PV.ty=(PV.ch-PV.ih*PV.s)/2;}
+const toImg=(sx,sy)=>({x:(sx-PV.tx)/PV.s,y:(sy-PV.ty)/PV.s});
+const toScr=p=>({x:p.x*PV.s+PV.tx,y:p.y*PV.s+PV.ty});
+const clampImg=p=>({x:Math.min(Math.max(p.x,0),PV.iw),y:Math.min(Math.max(p.y,0),PV.ih)});
+
+async function enterPhoto(){
+  const ph=cur.photo,st=stageOf(ph.date,cur.kase&&cur.kase.surgeryDate);
+  $('ph-title').innerHTML=`${esc(VIEW_LABEL[ph.view]||ph.view)}<span class="sub">${st.txt} · ${ph.date}</span>`;
+  const blob=await getPhotoBlob(ph);
+  PV.img=await decodeUpright(blob);
+  PV.iw=PV.img.width||PV.img.naturalWidth;PV.ih=PV.img.height||PV.img.naturalHeight;
+  const lmrec=await getRec('landmarks',ph.id);PV.lms=(lmrec&&lmrec.points)||{};PV.dirty=false;
+  const dwg=await getRec('drawings',ph.id);PV.strokes=(dwg&&dwg.strokes)||[];PV.undo=[];PV.redo=[];PV.drawDirty=false;
+  PV.calPts=[];PV.freePts=[];PV.activeLm=null;PV.curStroke=null;PV.lmVis=true;
+  PV.pointers.clear();PV.pinch=null;PV.drag=null;PV.color=DRAW_COLORS[0].c;PV.width=4;PV.eraser=false;
+  // aesthetic checklist tied to this view's schema
+  PV.aes=null;PV.aesRows=null;
+  const schema=AES_SCHEMA[ph.view];
+  document.querySelector('#modebar [data-m="mark"]').style.display=lmSet(ph.view)?'':'none';
+  $('mb-aes').style.display=schema?'':'none';
+  document.getElementById('mb-lmvis').style.display=lmSet(ph.view)?'':'none';
+  if(schema){const fid=cur.kase.id+'|aesthetic-'+schema;const rec=await getRec('forms',fid);
+    PV.aes={id:fid,schema,caseId:cur.kase.id,data:(rec&&rec.data)||{}};}
+  resizeCV();fitView();setMode('view');
+  updateLmVisBtn();
+}
+function updateLmVisBtn(){const b=$('mb-lmvis');if(!b)return;
+  const show=PV.lmVis||PV.mode==='mark';b.textContent=show?'隱藏點':'顯示點';b.style.opacity=PV.mode==='mark'?'0.5':'1';}
+function toggleLmVis(){PV.lmVis=!PV.lmVis;updateLmVisBtn();
+  const ab=$('aes-lmbtn');if(ab)ab.textContent=PV.lmVis?'隱藏標點':'顯示標點';draw();}
+async function flushPhotoSaves(){
+  if(PV.saveT){clearTimeout(PV.saveT);PV.saveT=null;}
+  if(PV.dirty&&cur.photo){await putRec('landmarks',{photoId:cur.photo.id,points:PV.lms,updatedAt:nowISO()});PV.dirty=false;}
+  if(PV.drawSaveT){clearTimeout(PV.drawSaveT);PV.drawSaveT=null;}
+  if(PV.drawDirty&&cur.photo){await putRec('drawings',{photoId:cur.photo.id,strokes:PV.strokes,updatedAt:nowISO()});PV.drawDirty=false;}
+}
+async function leavePhoto(){await flushPhotoSaves();if(PV.img&&PV.img.close)PV.img.close();PV.img=null;cur.photo=null;}
+function scheduleSave(){PV.dirty=true;if(PV.saveT)clearTimeout(PV.saveT);
+  PV.saveT=setTimeout(async()=>{PV.saveT=null;if(cur.photo){await putRec('landmarks',{photoId:cur.photo.id,points:PV.lms,updatedAt:nowISO()});PV.dirty=false;}},600);}
+function scheduleDrawSave(){PV.drawDirty=true;if(PV.drawSaveT)clearTimeout(PV.drawSaveT);
+  PV.drawSaveT=setTimeout(async()=>{PV.drawSaveT=null;if(cur.photo){await putRec('drawings',{photoId:cur.photo.id,strokes:PV.strokes,updatedAt:nowISO()});PV.drawDirty=false;}},700);}
+
+function setMode(m){PV.mode=m;
+  document.querySelectorAll('#modebar button[data-m]').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
+  if(m==='mark'){const set=lmSet(cur.photo.view);
+    if(set&&!PV.activeLm){const nx=set.find(l=>!PV.lms[l.k]);PV.activeLm=nx?nx.k:set[0].k;}}
+  updateLmVisBtn();renderRail();draw();}
+
+/* ---- render ---- */
+function mk(ctx,fn){ctx.save();fn();ctx.restore();}
+function drawMarker(ctx,p,color,label,active){const s=toScr(p);
+  mk(ctx,()=>{ctx.lineWidth=1.2;ctx.strokeStyle='rgba(0,0,0,.7)';
+    ctx.beginPath();ctx.moveTo(s.x-11,s.y);ctx.lineTo(s.x+11,s.y);ctx.moveTo(s.x,s.y-11);ctx.lineTo(s.x,s.y+11);ctx.stroke();
+    ctx.lineWidth=1;ctx.strokeStyle=color;
+    ctx.beginPath();ctx.moveTo(s.x-10,s.y);ctx.lineTo(s.x+10,s.y);ctx.moveTo(s.x,s.y-10);ctx.lineTo(s.x,s.y+10);ctx.stroke();
+    ctx.fillStyle=color;ctx.beginPath();ctx.arc(s.x,s.y,2.4,0,7);ctx.fill();
+    if(active){ctx.strokeStyle=color;ctx.lineWidth=1.6;ctx.beginPath();ctx.arc(s.x,s.y,15,0,7);ctx.stroke();}
+    if(label){ctx.font='700 11px ui-monospace,Menlo,monospace';ctx.lineWidth=3;ctx.strokeStyle='rgba(0,0,0,.85)';
+      ctx.strokeText(label,s.x+8,s.y-8);ctx.fillStyle='#fff';ctx.fillText(label,s.x+8,s.y-8);}});}
+function drawSeg(ctx,a,b,color,dash){const A=toScr(a),B=toScr(b);
+  mk(ctx,()=>{ctx.strokeStyle=color;ctx.lineWidth=1.3;if(dash)ctx.setLineDash([5,4]);
+    ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(B.x,B.y);ctx.stroke();});}
+function drawTxt(ctx,sx,sy,t,color){mk(ctx,()=>{ctx.font='600 12px ui-monospace,Menlo,monospace';
+  ctx.lineWidth=3.5;ctx.strokeStyle='rgba(0,0,0,.85)';ctx.strokeText(t,sx,sy);ctx.fillStyle=color;ctx.fillText(t,sx,sy);});}
+const fmtLen=px=>{const cal=cur.photo&&cur.photo.pxPerMm;return cal?(px/cal).toFixed(1)+' mm':Math.round(px)+' px';};
+
+function drawStrokes(ctx){
+  const all=PV.strokes.concat(PV.curStroke?[PV.curStroke]:[]);
+  for(const st of all){if(!st.pts||st.pts.length===0)continue;
+    mk(ctx,()=>{ctx.strokeStyle=st.color;ctx.lineWidth=st.width*PV.s;ctx.lineJoin='round';ctx.lineCap='round';
+      ctx.beginPath();const p0=toScr(st.pts[0]);ctx.moveTo(p0.x,p0.y);
+      if(st.pts.length===1){ctx.lineTo(p0.x+0.1,p0.y+0.1);}
+      else for(let i=1;i<st.pts.length;i++){const p=toScr(st.pts[i]);ctx.lineTo(p.x,p.y);}
+      ctx.stroke();});}
+}
+function draw(){
+  if(!PV.img)return;const ctx=cv.getContext('2d');
+  ctx.setTransform(PV.dpr,0,0,PV.dpr,0,0);ctx.fillStyle='#101619';ctx.fillRect(0,0,PV.cw,PV.ch);
+  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+  ctx.setTransform(PV.dpr*PV.s,0,0,PV.dpr*PV.s,PV.tx*PV.dpr,PV.ty*PV.dpr);
+  ctx.drawImage(PV.img,0,0);
+  ctx.setTransform(PV.dpr,0,0,PV.dpr,0,0);
+  const v=cur.photo.view,L=PV.lms;
+  // annotation strokes (always visible)
+  drawStrokes(ctx);
+  const showLm=PV.lmVis||PV.mode==='mark';
+  if(showLm){
+  if(isLateral(v)){
+    if(L.N&&L.T)drawSeg(ctx,L.N,L.T,'rgba(255,107,74,.55)');        // dorsal line
+    if(L.N&&L.AC)drawSeg(ctx,L.N,L.AC,'rgba(255,107,74,.35)',true); // alar-crease vertical (Goode)
+    if(L.G&&L.Pg)drawSeg(ctx,L.G,L.Pg,'rgba(255,107,74,.35)',true); // facial plane
+    if(L.Cb&&L.Sn)drawSeg(ctx,L.Sn,L.Cb,'rgba(255,107,74,.3)');
+  }else if(isFrontal(v)){
+    if(L.G&&L.Me)drawSeg(ctx,L.G,L.Me,'rgba(167,139,250,.6)',true);  // midline
+    if(L.EnR&&L.EnL)drawSeg(ctx,L.EnR,L.EnL,'rgba(255,107,74,.4)');
+    if(L.AlR&&L.AlL)drawSeg(ctx,L.AlR,L.AlL,'rgba(255,107,74,.4)');
+    if(L.G&&L.Me){for(const key of['R','S','T']){const P=L[key];if(!P)continue;
+      const off=horizOffset(P,L.G,L.Me);const foot={x:P.x-off,y:P.y};drawSeg(ctx,P,foot,'rgba(255,209,102,.85)');}}
+  }
+  const set=lmSet(v)||[];
+  for(const l of set){const p=L[l.k];if(p)drawMarker(ctx,p,'#FF6B4A',l.k,PV.mode==='mark'&&PV.activeLm===l.k);}
+  }
+  // calibration
+  PV.calPts.forEach((p,i)=>drawMarker(ctx,p,'#A78BFA',String(i+1)));
+  if(PV.calPts.length===2){drawSeg(ctx,PV.calPts[0],PV.calPts[1],'#A78BFA');
+    const m=toScr({x:(PV.calPts[0].x+PV.calPts[1].x)/2,y:(PV.calPts[0].y+PV.calPts[1].y)/2});
+    drawTxt(ctx,m.x+8,m.y-8,Math.round(dist(PV.calPts[0],PV.calPts[1]))+' px','#A78BFA');}
+  // free measure
+  PV.freePts.forEach((p,i)=>drawMarker(ctx,p,'#FFD166',String(i+1)));
+  if(PV.freePts.length>=2){drawSeg(ctx,PV.freePts[0],PV.freePts[1],'#FFD166');
+    const m=toScr({x:(PV.freePts[0].x+PV.freePts[1].x)/2,y:(PV.freePts[0].y+PV.freePts[1].y)/2});
+    drawTxt(ctx,m.x+8,m.y-8,fmtLen(dist(PV.freePts[0],PV.freePts[1])),'#FFD166');}
+  if(PV.freePts.length===3){drawSeg(ctx,PV.freePts[1],PV.freePts[2],'#FFD166');
+    const ang=angleAt(PV.freePts[1],PV.freePts[0],PV.freePts[2]);const vtx=toScr(PV.freePts[1]);
+    drawTxt(ctx,vtx.x+10,vtx.y+18,ang.toFixed(1)+'°','#FFD166');}
+}
+
+/* ---- hit test ---- */
+function hitPoint(list,sx,sy,r){let best=null,bd=r||26;
+  for(const it of list){const s=toScr(it.pt);const d=Math.hypot(s.x-sx,s.y-sy);if(d<bd){bd=d;best=it;}}return best;}
+function eraseAt(ip){ // remove strokes near ip (image space); returns true if changed
+  const thr=Math.max(8,PV.width*1.5)/PV.s+6;let changed=false;const keep=[];
+  for(const st of PV.strokes){let hit=false;
+    for(let i=0;i<st.pts.length;i++){if(dist(st.pts[i],ip)<thr){hit=true;break;}
+      if(i>0&&segPointDist(st.pts[i-1],st.pts[i],ip)<thr){hit=true;break;}}
+    if(hit){changed=true;}else keep.push(st);}
+  if(changed){PV.strokes=keep;}return changed;}
+function segPointDist(a,b,p){const dx=b.x-a.x,dy=b.y-a.y,l2=dx*dx+dy*dy;if(!l2)return dist(a,p);
+  let t=((p.x-a.x)*dx+(p.y-a.y)*dy)/l2;t=Math.max(0,Math.min(1,t));return Math.hypot(p.x-(a.x+t*dx),p.y-(a.y+t*dy));}
+function pushUndo(){PV.undo.push(PV.strokes.map(s=>({color:s.color,width:s.width,pts:s.pts.slice()})));if(PV.undo.length>40)PV.undo.shift();PV.redo=[];}
+
+/* ---- pointer handlers (two-finger zoom in every mode; no loupe) ---- */
+const isDrawInput=e=>PV.mode==='draw'&&!PV.eraser&&(e.pointerType==='pen'||!PV.penOnly);
+const isEraseInput=e=>PV.mode==='draw'&&PV.eraser&&(e.pointerType==='pen'||!PV.penOnly);
+function finalizeStroke(){
+  if(PV.curStroke){
+    if(PV.curStroke.pts.length>=1)PV.strokes.push(PV.curStroke);
+    else if(PV.undo.length)PV.undo.pop(); // empty stroke: undo the snapshot we pushed
+    PV.curStroke=null;scheduleDrawSave();renderRail();
+  }
+}
+cv.addEventListener('pointerdown',e=>{
+  e.preventDefault();cv.setPointerCapture(e.pointerId);
+  const pt={x:e.offsetX,y:e.offsetY};PV.pointers.set(e.pointerId,pt);
+  if(PV.pointers.size===2){finalizeStroke();PV.erasing=false;
+    const[a,b]=[...PV.pointers.values()];
+    PV.pinch={d0:Math.hypot(a.x-b.x,a.y-b.y)||1,mid0:{x:(a.x+b.x)/2,y:(a.y+b.y)/2},s0:PV.s,tx0:PV.tx,ty0:PV.ty};
+    PV.drag=null;PV.down=null;return;}
+  if(PV.mode==='draw'){
+    if(isDrawInput(e)){pushUndo();PV.curStroke={color:PV.color,width:PV.width,pts:[clampImg(toImg(pt.x,pt.y))]};draw();return;}
+    if(isEraseInput(e)){pushUndo();PV.erasing=true;if(!eraseAt(clampImg(toImg(pt.x,pt.y))))PV.undo.pop();else draw();return;}
+    PV.down={...pt};PV.moved=false;PV.drag=null;return; // finger navigates
+  }
+  PV.down={...pt};PV.moved=false;PV.drag=null;
+  if(PV.mode==='mark'){const a=PV.activeLm&&PV.lms[PV.activeLm];
+    if(a){const h=hitPoint([{key:PV.activeLm,pt:PV.lms[PV.activeLm]}],pt.x,pt.y,24);if(h)PV.drag={type:'lm',key:PV.activeLm};}}
+  else if(PV.mode==='cal'){const h=hitPoint(PV.calPts.map((p,i)=>({key:i,pt:p})),pt.x,pt.y);if(h)PV.drag={type:'cal',key:h.key};}
+  else if(PV.mode==='free'){const h=hitPoint(PV.freePts.map((p,i)=>({key:i,pt:p})),pt.x,pt.y);if(h)PV.drag={type:'free',key:h.key};}
+});
+cv.addEventListener('pointermove',e=>{
+  if(!PV.pointers.has(e.pointerId))return;
+  const prev=PV.pointers.get(e.pointerId),pt={x:e.offsetX,y:e.offsetY};PV.pointers.set(e.pointerId,pt);
+  if(PV.pinch&&PV.pointers.size>=2){const[a,b]=[...PV.pointers.values()];
+    const d=Math.hypot(a.x-b.x,a.y-b.y)||1,mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+    let s=PV.pinch.s0*d/PV.pinch.d0;s=Math.min(Math.max(s,PV.fit*0.4),60);
+    const imx=(PV.pinch.mid0.x-PV.pinch.tx0)/PV.pinch.s0,imy=(PV.pinch.mid0.y-PV.pinch.ty0)/PV.pinch.s0;
+    PV.s=s;PV.tx=mid.x-imx*s;PV.ty=mid.y-imy*s;draw();return;}
+  if(PV.mode==='draw'){
+    if(PV.curStroke){const last=PV.curStroke.pts[PV.curStroke.pts.length-1];const ls=toScr(last);
+      if(Math.hypot(pt.x-ls.x,pt.y-ls.y)>=2){PV.curStroke.pts.push(clampImg(toImg(pt.x,pt.y)));draw();}return;}
+    if(PV.erasing){if(eraseAt(clampImg(toImg(pt.x,pt.y))))draw();return;}
+    if(PV.down){if(!PV.moved&&Math.hypot(pt.x-PV.down.x,pt.y-PV.down.y)>8)PV.moved=true;
+      if(PV.moved){PV.tx+=pt.x-prev.x;PV.ty+=pt.y-prev.y;draw();}}return;}
+  if(PV.drag){const ip=clampImg(toImg(pt.x,pt.y));
+    if(PV.drag.type==='lm')PV.lms[PV.drag.key]=ip;else if(PV.drag.type==='cal')PV.calPts[PV.drag.key]=ip;else PV.freePts[PV.drag.key]=ip;
+    PV.moved=PV.moved||Math.hypot(pt.x-PV.down.x,pt.y-PV.down.y)>3;draw();return;}
+  if(!PV.down)return;
+  if(!PV.moved&&Math.hypot(pt.x-PV.down.x,pt.y-PV.down.y)>8)PV.moved=true;
+  if(PV.moved){PV.tx+=pt.x-prev.x;PV.ty+=pt.y-prev.y;draw();}
+});
+function endPointer(e){
+  if(!PV.pointers.has(e.pointerId))return;
+  PV.pointers.delete(e.pointerId);
+  if(PV.pinch){if(PV.pointers.size<2){PV.pinch=null;PV.down=null;PV.drag=null;}return;}
+  if(PV.mode==='draw'){
+    if(PV.curStroke){finalizeStroke();draw();return;}
+    if(PV.erasing){PV.erasing=false;scheduleDrawSave();renderRail();return;}
+    PV.down=null;PV.moved=false;return;}
+  const wasDrag=PV.drag,moved=PV.moved,down=PV.down;PV.drag=null;PV.down=null;
+  if(wasDrag){if(moved){if(wasDrag.type==='lm')scheduleSave();renderRail();draw();}return;}
+  if(!moved&&down){const now=Date.now();
+    if(PV.mode==='view'||PV.mode==='aes'){
+      if(now-PV.lastTap<300){PV.lastTap=0;
+        if(PV.s>PV.fit*1.4)fitView();else{const ip=toImg(down.x,down.y);const s=PV.fit*2.6;PV.s=s;PV.tx=down.x-ip.x*s;PV.ty=down.y-ip.y*s;}
+        draw();}else PV.lastTap=now;return;}
+    const ip=toImg(down.x,down.y);if(ip.x<0||ip.y<0||ip.x>PV.iw||ip.y>PV.ih)return;
+    if(PV.mode==='cal'){if(PV.calPts.length>=2)PV.calPts=[ip];else PV.calPts.push(ip);renderRail();draw();}
+    else if(PV.mode==='mark'){
+      if(!lmSet(cur.photo.view))return;
+      if(PV.activeLm){PV.lms[PV.activeLm]=clampImg(ip);scheduleSave();renderRail();draw();} // no auto-advance
+      else toast('先在下方選要標的點');}
+    else if(PV.mode==='free'){if(PV.freePts.length>=3)PV.freePts=[ip];else PV.freePts.push(ip);renderRail();draw();}}
+}
+cv.addEventListener('pointerup',endPointer);
+cv.addEventListener('pointercancel',endPointer);
+window.addEventListener('resize',()=>{if($('scr-photo').classList.contains('active')&&PV.img){resizeCV();fitView();draw();}
+  if($('scr-sketch').classList.contains('active')&&SK.img){resizeSK();fitSK();drawSK();}});
+
+/* ===== measurement rail ===== */
+function measureChips(){
+  const v=cur.photo.view;if(!isAnalysis(v))return'';
+  const rows=computeMeasures(v,PV.lms,cur.photo.pxPerMm,refs);if(!rows.length)return'';
+  const rnd=x=>Math.abs(x)>=10?Math.round(x):Math.round(x*100)/100;
+  return`<div class="chips">`+rows.map(r=>{
+    const pend=r.val==null,isDev=!!r.oneSided;
+    let val=pend?'—':r.val.toFixed(r.dec),dir='';
+    if(!pend&&r.extra&&r.extra.signed!=null)dir=r.extra.signed>0?' →影像右':(r.extra.signed<0?' →影像左':'');
+    let refTxt='';
+    if(r.ref){const[lo,hi]=r.ref;let out='';
+      if(!pend){if(isDev){if(r.val>hi)out=' <span class="out">!</span>';}
+        else{if(r.val<lo)out=' <span class="out">▼</span>';else if(r.val>hi)out=' <span class="out">▲</span>';}}
+      refTxt=isDev?`<div class="ref">理想 0 · 上限 ${rnd(hi)}${r.unit}${out}</div>`:`<div class="ref">參考 ${rnd(lo)}–${rnd(hi)}${r.unit}${out}</div>`;}
+    return`<div class="mchip ${pend?'pend':''}"><div class="k">${esc(r.name)}</div>
+      <div class="val">${val}<span class="u"> ${r.unit}${dir}</span></div>${refTxt}</div>`;
+  }).join('')+`</div>`;
+}
+function renderRail(){
+  const ph=cur.photo;if(!ph)return;const cs=$('calstate');
+  if(ph.pxPerMm){cs.textContent=`已校正 · 1mm=${ph.pxPerMm.toFixed(2)}px`;cs.className='st ok';}
+  else{cs.textContent='未校正 · 距離以 px';cs.className='st no';}
+  const body=$('railbody');body.className='';
+  if(PV.mode==='cal'){$('railname').textContent='比例尺校正';
+    let inner='';
+    if(PV.calPts.length<2)inner=`<div class="calmsg">${PV.calPts.length===0?'在照片尺規上點<b>第一個</b>刻度點（雙指縮放可放大對準，點可拖曳微調）':'再點<b>第二個</b>刻度點'}</div>`;
+    else inner=`<div class="calpanel">${[10,20,30,50].map(x=>`<button type="button" class="qmm" onclick="$('f-mm').value=${x}">${x}</button>`).join('')}
+      <input type="number" id="f-mm" inputmode="decimal" placeholder="mm" step="0.1" min="0.1">
+      <button type="button" class="go" onclick="applyCal()">完成校正</button></div>
+      <div class="calmsg">輸入兩點實際距離（mm）；兩點可拖曳微調。</div>`;
+    if(ph.pxPerMm)inner+=`<div class="calpanel"><button type="button" class="qmm" onclick="clearCal()">清除既有校正</button></div>`;
+    body.innerHTML=inner;
+  }else if(PV.mode==='mark'){$('railname').textContent='LANDMARKS';
+    const set=lmSet(ph.view);
+    if(!set){body.innerHTML=`<div class="calmsg">此視角未定義 landmark，可用「量測」量任意距離角度。</div>`;return;}
+    const chips=set.map(l=>{const on=!!PV.lms[l.k],act=PV.activeLm===l.k;
+      return`<button type="button" class="lmchip ${on?'set':''} ${act?'act':''}" onclick="selectLm('${l.k}')">
+        <span class="abbr">${l.k}</span><span>${l.zh}</span>${on?`<span class="x" onclick="removeLm(event,'${l.k}')">✕</span>`:''}</button>`;}).join('');
+    const active=set.find(l=>l.k===PV.activeLm);
+    body.innerHTML=`<div class="lmchips">${chips}</div>
+      <div class="calmsg">${active?`點照片放置 <b>${active.k}</b>（${esc(active.zh)}）。再點一次即移動該點；要標下一個請先在上方選。`:'點上方晶片選要標的點。'}</div>`+measureChips();
+  }else if(PV.mode==='aes'){$('railname').textContent='美學分析';
+    body.className='railbody-tall';body.innerHTML=aesPanel();return;
+  }else if(PV.mode==='free'){$('railname').textContent='自由量測';
+    body.innerHTML=`<div class="calmsg">點 2 點量距離；第 3 點量角度（頂點＝第 2 點）；第 4 次點擊重來。</div>
+      <div class="calpanel"><button type="button" class="qmm" onclick="PV.freePts=[];renderRail();draw()">清除</button></div>`;
+  }else if(PV.mode==='draw'){$('railname').textContent='繪圖';
+    body.innerHTML=drawPalette();
+  }else{$('railname').textContent='量測';
+    body.innerHTML=isAnalysis(ph.view)?measureChips():`<div class="calmsg">雙擊放大、雙指縮放拖曳。切「量測」量任意距離角度。</div>`;}
+}
+function selectLm(k){PV.activeLm=k;renderRail();draw();}
+/* ---- aesthetic checklist beside the photo ---- */
+function aesPanel(){
+  if(!PV.aes)return`<div class="calmsg">此視角無對應美學分析表。</div>`;
+  const sc=AESTHETIC[PV.aes.schema];PV.aesRows=sc.rows;
+  const rows=sc.rows.map(([label,opts],ri)=>{
+    const cur=PV.aes.data[label];
+    const oh=opts.map((o,oi)=>`<button type="button" class="opt ${cur===o?'on':''}" onclick="aesToggle(${ri},${oi})">${esc(o)}</button>`).join('');
+    return`<div class="aesrow" id="aesr-${ri}"><div class="q">${esc(label)}</div><div class="opts">${oh}</div></div>`;
+  }).join('');
+  const filled=sc.rows.filter(([l])=>PV.aes.data[l]).length;
+  const lmBtn=lmSet(cur.photo.view)?`<button type="button" class="tool" id="aes-lmbtn" style="margin-left:auto" onclick="toggleLmVis()">${PV.lmVis?'隱藏標點':'顯示標點'}</button>`:'';
+  return`<div class="calmsg" style="display:flex;align-items:center;gap:10px">
+      <span>${esc(sc.title.split('—')[0])} · 已填 <b>${filled}/${sc.rows.length}</b></span>
+      ${lmBtn}
+    </div><div>${rows}</div>`;
+}
+function aesToggle(ri,oi){const[label,opts]=PV.aesRows[ri];const o=opts[oi];
+  if(PV.aes.data[label]===o)delete PV.aes.data[label];else PV.aes.data[label]=o;
+  putRec('forms',{id:PV.aes.id,caseId:PV.aes.caseId,kind:'aesthetic-'+PV.aes.schema,data:PV.aes.data,updatedAt:nowISO()});
+  const cont=document.querySelector(`#aesr-${ri} .opts`);
+  cont.querySelectorAll('.opt').forEach((btn,i)=>btn.classList.toggle('on',PV.aes.data[label]===opts[i]));
+  // refresh the filled counter only
+  const sc=AESTHETIC[PV.aes.schema];const filled=sc.rows.filter(([l])=>PV.aes.data[l]).length;
+  const cm=document.querySelector('#railbody .calmsg b');if(cm)cm.textContent=`${filled}/${sc.rows.length}`;
+}function removeLm(ev,k){ev.stopPropagation();delete PV.lms[k];PV.activeLm=k;scheduleSave();renderRail();draw();}
+async function applyCal(){const mm=parseFloat($('f-mm').value);
+  if(!mm||mm<=0){toast('請輸入有效 mm');return;}if(PV.calPts.length!==2)return;
+  const px=dist(PV.calPts[0],PV.calPts[1]);if(px<10){toast('兩點太近');return;}
+  cur.photo.pxPerMm=px/mm;await putRec('photos',cur.photo);toast(`已校正 1mm=${cur.photo.pxPerMm.toFixed(2)}px`);renderRail();draw();}
+async function clearCal(){cur.photo.pxPerMm=null;await putRec('photos',cur.photo);PV.calPts=[];renderRail();draw();}
+async function deletePhoto(){const ph=cur.photo;if(!ph)return;
+  if(!await confirmDlg('刪除照片','將刪除此照片與其量測、繪圖標記。無法復原。','刪除'))return;
+  await delCascadePhoto(ph);PV.dirty=false;PV.drawDirty=false;cur.photo=null;
+  if(PV.img&&PV.img.close)PV.img.close();PV.img=null;toast('已刪除');history.back();}
+
+/* ===== draw palette ===== */
+function drawPalette(){
+  const sw=DRAW_COLORS.map(d=>`<button class="sw ${!PV.eraser&&PV.color===d.c?'on':''}" style="background:${d.c}" onclick="setDrawColor('${d.c}')" aria-label="${d.k}"></button>`).join('');
+  const ws=DRAW_WIDTHS.map(w=>`<button class="${PV.width===w?'on':''}" onclick="setDrawWidth(${w})"><span class="dot" style="width:${Math.min(w+3,12)}px;height:${Math.min(w+3,12)}px"></span></button>`).join('');
+  return`<div class="drawbar">${sw}
+    <button class="sw eraser ${PV.eraser?'on':''}" onclick="toggleEraser()" aria-label="橡皮擦">⌫</button>
+    <div class="wsel">${ws}</div></div>
+   <div class="drawbar">
+    <button class="tool ${PV.penOnly?'on':''}" onclick="togglePen()">${PV.penOnly?'✎ 只用筆':'✎ 筆＋手指'}</button>
+    <button class="tool" onclick="undoDraw()" ${PV.undo.length?'':'disabled'}>↶ 復原</button>
+    <button class="tool" onclick="redoDraw()" ${PV.redo.length?'':'disabled'}>↷ 重做</button>
+    <button class="tool" onclick="clearDraw()" ${PV.strokes.length?'':'disabled'}>清除全部</button></div>
+   <div class="calmsg">${PV.penOnly?'Apple Pencil 畫線、手指縮放平移':'手指或筆皆可畫；雙指縮放平移'}。橡皮擦點觸線條即刪除整筆。</div>`;
+}
+function setDrawColor(c){PV.color=c;PV.eraser=false;renderRail();}
+function setDrawWidth(w){PV.width=w;renderRail();}
+function toggleEraser(){PV.eraser=!PV.eraser;renderRail();}
+function togglePen(){PV.penOnly=!PV.penOnly;renderRail();}
+function undoDraw(){if(!PV.undo.length)return;PV.redo.push(PV.strokes.map(s=>({color:s.color,width:s.width,pts:s.pts.slice()})));
+  PV.strokes=PV.undo.pop();scheduleDrawSave();renderRail();draw();}
+function redoDraw(){if(!PV.redo.length)return;PV.undo.push(PV.strokes.map(s=>({color:s.color,width:s.width,pts:s.pts.slice()})));
+  PV.strokes=PV.redo.pop();scheduleDrawSave();renderRail();draw();}
+async function clearDraw(){if(!PV.strokes.length)return;if(!await confirmDlg('清除繪圖','刪除此照片上的全部筆畫？','清除'))return;
+  pushUndo();PV.strokes=[];scheduleDrawSave();renderRail();draw();}
+
+/* ===================================================================
+   SKETCH ENGINE  (draw on generated template underlays)
+   =================================================================== */
+function makeTemplateCanvas(id){
+  const w=1000,h=id==='basal'?1000:1333;
+  const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');
+  x.fillStyle='#fff';x.fillRect(0,0,w,h);
+  x.strokeStyle='#C9D2D8';x.lineWidth=1;x.strokeRect(.5,.5,w-1,h-1);
+  x.strokeStyle='#9AA7AF';x.lineWidth=3;x.lineJoin='round';x.lineCap='round';
+  x.fillStyle='#6E7C84';x.font='600 26px -apple-system,sans-serif';
+  const T=(t,px,py)=>{x.fillText(t,px,py);};
+  if(id==='lateral'){
+    // schematic lateral nasal skeleton facing right
+    x.beginPath();x.moveTo(300,300);x.lineTo(430,520);x.stroke();           // nasal bone
+    x.beginPath();x.moveTo(430,520);x.lineTo(560,690);x.stroke();           // ULC / dorsum
+    x.beginPath();x.moveTo(560,690);x.bezierCurveTo(660,760,690,850,600,900);x.stroke(); // LLC / tip
+    x.beginPath();x.moveTo(600,900);x.lineTo(470,940);x.stroke();           // columella
+    x.setLineDash([8,7]);x.strokeStyle='#BCC6CC';
+    x.beginPath();x.moveTo(300,300);x.lineTo(470,940);x.stroke();           // facial plane ref
+    x.beginPath();x.moveTo(430,520);x.lineTo(470,880);x.stroke();           // septum ref
+    x.setLineDash([]);x.strokeStyle='#9AA7AF';
+    T('Lateral 側面鼻骨架（描摹用）',40,70);T('nasal bone',180,300);T('ULC',470,560);T('LLC / tip',640,820);
+  }else if(id==='basal'){
+    x.beginPath();x.moveTo(500,250);x.lineTo(230,760);x.lineTo(770,760);x.closePath();x.stroke(); // triangle
+    x.beginPath();x.moveTo(500,250);x.lineTo(500,700);x.stroke();           // columella midline
+    x.beginPath();x.ellipse(390,600,80,120,-0.25,0,7);x.stroke();          // R nostril
+    x.beginPath();x.ellipse(610,600,80,120,0.25,0,7);x.stroke();           // L nostril
+    T('Basal 基底（描摹用）',40,70);T('columella',520,470);T('nostril',150,620);
+  }else if(id==='septum'){
+    x.strokeRect(250,300,500,600);                                          // quadrangular cartilage box
+    x.strokeStyle='#7C3AED';x.lineWidth=6;
+    x.beginPath();x.moveTo(260,320);x.lineTo(740,320);x.stroke();          // dorsal strut
+    x.beginPath();x.moveTo(720,320);x.lineTo(720,880);x.stroke();          // caudal strut
+    x.strokeStyle='#9AA7AF';x.lineWidth=3;
+    T('Septum L-strut（保留 ≥10mm 背/尾側）',40,70);T('dorsal',300,300);T('caudal',760,600);
+  }else if(id==='osteotomy'){
+    // frontal nasal pyramid
+    x.beginPath();x.moveTo(500,260);x.lineTo(380,760);x.stroke();
+    x.beginPath();x.moveTo(500,260);x.lineTo(620,760);x.stroke();
+    x.beginPath();x.moveTo(380,760);x.lineTo(620,760);x.stroke();
+    x.strokeStyle='#C8452C';x.lineWidth=5;x.setLineDash([10,8]);
+    x.beginPath();x.moveTo(470,300);x.lineTo(470,720);x.stroke();          // medial R
+    x.beginPath();x.moveTo(530,300);x.lineTo(530,720);x.stroke();          // medial L
+    x.beginPath();x.moveTo(360,740);x.lineTo(400,320);x.stroke();          // lateral R
+    x.beginPath();x.moveTo(640,740);x.lineTo(600,320);x.stroke();          // lateral L
+    x.setLineDash([]);x.strokeStyle='#9AA7AF';x.lineWidth=3;
+    T('Osteotomy 截骨路徑（medial/lateral/transverse）',40,70);
+  }else{T('空白畫布',40,70);}
+  return c;
+}
+const SK={img:null,iw:0,ih:0,s:1,tx:0,ty:0,fit:1,cw:0,ch:0,dpr:1,
+  pointers:new Map(),pinch:null,down:null,moved:false,
+  strokes:[],curStroke:null,undo:[],redo:[],erasing:false,drawDirty:false,saveT:null,
+  color:'#141B1F',width:4,eraser:false,penOnly:true};
+const cvk=$('cvk'),kwrap=cvk.parentElement;
+function resizeSK(){const r=kwrap.getBoundingClientRect();SK.dpr=Math.min(window.devicePixelRatio||1,3);
+  SK.cw=r.width;SK.ch=r.height;cvk.width=Math.round(r.width*SK.dpr);cvk.height=Math.round(r.height*SK.dpr);}
+function fitSK(){SK.fit=Math.min(SK.cw/SK.iw,SK.ch/SK.ih)*0.97;SK.s=SK.fit;SK.tx=(SK.cw-SK.iw*SK.s)/2;SK.ty=(SK.ch-SK.ih*SK.s)/2;}
+const kToImg=(sx,sy)=>({x:(sx-SK.tx)/SK.s,y:(sy-SK.ty)/SK.s});
+const kToScr=p=>({x:p.x*SK.s+SK.tx,y:p.y*SK.s+SK.ty});
+const kClamp=p=>({x:Math.min(Math.max(p.x,0),SK.iw),y:Math.min(Math.max(p.y,0),SK.ih)});
+async function enterSketch(){const s=cur.sketch;
+  $('sk-title').innerHTML=`${esc(s.title||'手繪')}<span class="sub">${TEMPLATES.find(t=>t.id===s.template)?.name||''}</span>`;
+  SK.img=makeTemplateCanvas(s.template);SK.iw=SK.img.width;SK.ih=SK.img.height;
+  SK.strokes=(s.strokes||[]).map(x=>({...x,pts:x.pts.slice()}));SK.undo=[];SK.redo=[];SK.drawDirty=false;
+  SK.curStroke=null;SK.pointers.clear();SK.pinch=null;SK.color=DRAW_COLORS[0].c;SK.width=4;SK.eraser=false;
+  resizeSK();fitSK();skRail();drawSK();}
+async function flushSketch(){if(SK.saveT){clearTimeout(SK.saveT);SK.saveT=null;}
+  if(SK.drawDirty&&cur.sketch){cur.sketch.strokes=SK.strokes;await putRec('sketches',cur.sketch);SK.drawDirty=false;}}
+async function leaveSketch(){await flushSketch();if(SK.img&&SK.img.close)SK.img.close?.();SK.img=null;cur.sketch=null;}
+function skSave(){SK.drawDirty=true;if(SK.saveT)clearTimeout(SK.saveT);
+  SK.saveT=setTimeout(async()=>{SK.saveT=null;if(cur.sketch){cur.sketch.strokes=SK.strokes;await putRec('sketches',cur.sketch);SK.drawDirty=false;}},700);}
+function drawSK(){if(!SK.img)return;const ctx=cvk.getContext('2d');
+  ctx.setTransform(SK.dpr,0,0,SK.dpr,0,0);ctx.fillStyle='#2A343A';ctx.fillRect(0,0,SK.cw,SK.ch);
+  ctx.setTransform(SK.dpr*SK.s,0,0,SK.dpr*SK.s,SK.tx*SK.dpr,SK.ty*SK.dpr);ctx.drawImage(SK.img,0,0);
+  ctx.setTransform(SK.dpr,0,0,SK.dpr,0,0);
+  const all=SK.strokes.concat(SK.curStroke?[SK.curStroke]:[]);
+  for(const st of all){if(!st.pts.length)continue;
+    ctx.save();ctx.strokeStyle=st.color;ctx.lineWidth=st.width*SK.s;ctx.lineJoin='round';ctx.lineCap='round';
+    ctx.beginPath();const p0=kToScr(st.pts[0]);ctx.moveTo(p0.x,p0.y);
+    if(st.pts.length===1)ctx.lineTo(p0.x+0.1,p0.y+0.1);
+    else for(let i=1;i<st.pts.length;i++){const p=kToScr(st.pts[i]);ctx.lineTo(p.x,p.y);}
+    ctx.stroke();ctx.restore();}}
+function skErase(ip){const thr=Math.max(8,SK.width*1.5)/SK.s+6;let ch=false;const keep=[];
+  for(const st of SK.strokes){let hit=false;for(let i=0;i<st.pts.length;i++){if(dist(st.pts[i],ip)<thr){hit=true;break;}
+    if(i>0&&segPointDist(st.pts[i-1],st.pts[i],ip)<thr){hit=true;break;}}if(hit)ch=true;else keep.push(st);}
+  if(ch)SK.strokes=keep;return ch;}
+function skPushUndo(){SK.undo.push(SK.strokes.map(s=>({color:s.color,width:s.width,pts:s.pts.slice()})));if(SK.undo.length>40)SK.undo.shift();SK.redo=[];}
+const skDrawInput=e=>!SK.eraser&&(e.pointerType==='pen'||!SK.penOnly);
+const skEraseInput=e=>SK.eraser&&(e.pointerType==='pen'||!SK.penOnly);
+function skFinalize(){if(SK.curStroke){if(SK.curStroke.pts.length>=1)SK.strokes.push(SK.curStroke);else if(SK.undo.length)SK.undo.pop();SK.curStroke=null;skSave();skRail();}}
+cvk.addEventListener('pointerdown',e=>{e.preventDefault();cvk.setPointerCapture(e.pointerId);
+  const pt={x:e.offsetX,y:e.offsetY};SK.pointers.set(e.pointerId,pt);
+  if(SK.pointers.size===2){skFinalize();SK.erasing=false;const[a,b]=[...SK.pointers.values()];
+    SK.pinch={d0:Math.hypot(a.x-b.x,a.y-b.y)||1,mid0:{x:(a.x+b.x)/2,y:(a.y+b.y)/2},s0:SK.s,tx0:SK.tx,ty0:SK.ty};SK.down=null;return;}
+  if(skDrawInput(e)){skPushUndo();SK.curStroke={color:SK.color,width:SK.width,pts:[kClamp(kToImg(pt.x,pt.y))]};drawSK();return;}
+  if(skEraseInput(e)){skPushUndo();SK.erasing=true;if(!skErase(kClamp(kToImg(pt.x,pt.y))))SK.undo.pop();else drawSK();return;}
+  SK.down={...pt};SK.moved=false;});
+cvk.addEventListener('pointermove',e=>{if(!SK.pointers.has(e.pointerId))return;
+  const prev=SK.pointers.get(e.pointerId),pt={x:e.offsetX,y:e.offsetY};SK.pointers.set(e.pointerId,pt);
+  if(SK.pinch&&SK.pointers.size>=2){const[a,b]=[...SK.pointers.values()];
+    const d=Math.hypot(a.x-b.x,a.y-b.y)||1,mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+    let s=SK.pinch.s0*d/SK.pinch.d0;s=Math.min(Math.max(s,SK.fit*0.4),60);
+    const imx=(SK.pinch.mid0.x-SK.pinch.tx0)/SK.pinch.s0,imy=(SK.pinch.mid0.y-SK.pinch.ty0)/SK.pinch.s0;
+    SK.s=s;SK.tx=mid.x-imx*s;SK.ty=mid.y-imy*s;drawSK();return;}
+  if(SK.curStroke){const last=SK.curStroke.pts[SK.curStroke.pts.length-1],ls=kToScr(last);
+    if(Math.hypot(pt.x-ls.x,pt.y-ls.y)>=2){SK.curStroke.pts.push(kClamp(kToImg(pt.x,pt.y)));drawSK();}return;}
+  if(SK.erasing){if(skErase(kClamp(kToImg(pt.x,pt.y))))drawSK();return;}
+  if(SK.down){if(!SK.moved&&Math.hypot(pt.x-SK.down.x,pt.y-SK.down.y)>8)SK.moved=true;
+    if(SK.moved){SK.tx+=pt.x-prev.x;SK.ty+=pt.y-prev.y;drawSK();}}});
+function skEnd(e){if(!SK.pointers.has(e.pointerId))return;SK.pointers.delete(e.pointerId);
+  if(SK.pinch){if(SK.pointers.size<2){SK.pinch=null;SK.down=null;}return;}
+  if(SK.curStroke){skFinalize();drawSK();return;}
+  if(SK.erasing){SK.erasing=false;skSave();skRail();return;}SK.down=null;SK.moved=false;}
+cvk.addEventListener('pointerup',skEnd);cvk.addEventListener('pointercancel',skEnd);
+function skRail(){$('skrail').innerHTML=(function(){
+  const sw=DRAW_COLORS.map(d=>`<button class="sw ${!SK.eraser&&SK.color===d.c?'on':''}" style="background:${d.c}" onclick="skColor('${d.c}')"></button>`).join('');
+  const ws=DRAW_WIDTHS.map(w=>`<button class="${SK.width===w?'on':''}" onclick="skWidth(${w})"><span class="dot" style="width:${Math.min(w+3,12)}px;height:${Math.min(w+3,12)}px"></span></button>`).join('');
+  return`<div class="drawbar">${sw}<button class="sw eraser ${SK.eraser?'on':''}" onclick="skToggleEraser()">⌫</button><div class="wsel">${ws}</div></div>
+    <div class="drawbar"><button class="tool ${SK.penOnly?'on':''}" onclick="skTogglePen()">${SK.penOnly?'✎ 只用筆':'✎ 筆＋手指'}</button>
+    <button class="tool" onclick="skUndo()" ${SK.undo.length?'':'disabled'}>↶ 復原</button>
+    <button class="tool" onclick="skRedo()" ${SK.redo.length?'':'disabled'}>↷ 重做</button>
+    <button class="tool" onclick="skClear()" ${SK.strokes.length?'':'disabled'}>清除</button></div>`;})();}
+function skColor(c){SK.color=c;SK.eraser=false;skRail();}
+function skWidth(w){SK.width=w;skRail();}
+function skToggleEraser(){SK.eraser=!SK.eraser;skRail();}
+function skTogglePen(){SK.penOnly=!SK.penOnly;skRail();}
+function skUndo(){if(!SK.undo.length)return;SK.redo.push(SK.strokes.map(s=>({color:s.color,width:s.width,pts:s.pts.slice()})));SK.strokes=SK.undo.pop();skSave();skRail();drawSK();}
+function skRedo(){if(!SK.redo.length)return;SK.undo.push(SK.strokes.map(s=>({color:s.color,width:s.width,pts:s.pts.slice()})));SK.strokes=SK.redo.pop();skSave();skRail();drawSK();}
+async function skClear(){if(!SK.strokes.length)return;if(!await confirmDlg('清除','刪除全部筆畫？','清除'))return;skPushUndo();SK.strokes=[];skSave();skRail();drawSK();}
+
+/* ===================================================================
+   FORMS  (aesthetic analysis + operative plan)
+   =================================================================== */
+let formState=null;
+async function renderForm(kind){
+  const meta=FORM_KINDS[kind];if(!meta)return go('#c/'+cur.kase.id);
+  const id=cur.kase.id+'|'+kind;const rec=await getRec('forms',id);
+  formState={id,kind,caseId:cur.kase.id,data:(rec&&rec.data)||{},rows:[]};
+  const c=cur.kase;
+  $('fm-title').innerHTML=(kind==='opplan'?OPPLAN.title:AESTHETIC[meta.schema].title)+`<span class="sub">${esc(c.label||c.type)}</span>`;
+  let html='',ri=0;
+  const addRow=(label,opts,multi)=>{formState.rows.push({label,opts,multi});
+    const chosen=multi?(formState.data[label]||[]):formState.data[label];
+    const oh=opts.map((o,oi)=>{const on=multi?chosen.includes(o):chosen===o;
+      return`<button type="button" class="opt ${multi?'multi':''} ${on?'on':''}" onclick="toggleOpt(${ri},${oi})">${esc(o)}</button>`;}).join('');
+    html+=`<div class="formrow" id="frow-${ri}"><div class="q">${esc(label)}</div><div class="opts">${oh}</div></div>`;ri++;};
+  if(kind==='opplan'){for(const[grp,rows] of OPPLAN.groups){html+=`<div class="formgroup">${esc(grp)}</div>`;
+    for(const[label,opts,multi] of rows)addRow(label,opts,!!multi);}}
+  else{for(const[label,opts] of AESTHETIC[meta.schema].rows)addRow(label,opts,false);}
+  $('formbody').innerHTML=html;updateFormStatus();
+}
+function toggleOpt(ri,oi){const row=formState.rows[ri],o=row.opts[oi];
+  if(row.multi){let arr=Array.isArray(formState.data[row.label])?formState.data[row.label].slice():[];
+    const k=arr.indexOf(o);if(k>=0)arr.splice(k,1);else arr.push(o);
+    if(arr.length)formState.data[row.label]=arr;else delete formState.data[row.label];}
+  else{if(formState.data[row.label]===o)delete formState.data[row.label];else formState.data[row.label]=o;}
+  const cont=document.querySelector(`#frow-${ri} .opts`);
+  cont.querySelectorAll('.opt').forEach((btn,i)=>{const oo=row.opts[i];
+    const on=row.multi?(formState.data[row.label]||[]).includes(oo):formState.data[row.label]===oo;btn.classList.toggle('on',on);});
+  updateFormStatus();
+}
+function updateFormStatus(){const total=formState.rows.length;
+  const filled=formState.rows.filter(r=>{const v=formState.data[r.label];return Array.isArray(v)?v.length:v;}).length;
+  $('fm-status').textContent=`已填 ${filled} / ${total} 項`;}
+async function saveForm(){await putRec('forms',{id:formState.id,caseId:formState.caseId,kind:formState.kind,data:formState.data,updatedAt:nowISO()});
+  toast('已儲存');}
+async function clearForm(){if(!await confirmDlg('清除表單','清空此表單全部選項？','清除'))return;
+  formState.data={};await store.del('forms',formState.id);renderForm(formState.kind);toast('已清除');}
+
+/* ===================================================================
+   LEARNING SYSTEM
+   =================================================================== */
+let LEARN={pred:null,dec:null,refl:null};
+const LEN_KEYS=new Set(['nt','tipproj','col','infra','premx','ufh','mfh','lfh','ull','chinv','basew','icd','dorw','alw']);
+async function renderLearn(){
+  const c=cur.kase;
+  $('ln-title').innerHTML=`學習 · ${esc(c.label||'手術')}<span class="sub">${c.surgeryDate?('手術日 '+c.surgeryDate):'手術日未設定'}</span>`;
+  const[pred,dec,refl,reviews,lessons]=await Promise.all([
+    getRec('predictions',c.id),getRec('decisions',c.id),getRec('reflections',c.id),allRec('reviews'),allRec('lessons')]);
+  LEARN.pred=pred||{caseId:c.id,answers:{},targets:[],lockedAt:null};
+  LEARN.dec=dec||{caseId:c.id,entries:[]};
+  LEARN.refl=refl||{caseId:c.id,answers:{}};
+  const revs=reviews.filter(r=>r.caseId===c.id).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const less=lessons.filter(l=>l.caseId===c.id).sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
+  // preload photos+landmarks for pva
+  const photos=(await allRec('photos')).filter(p=>p.caseId===c.id);
+  const lmAll=await allRec('landmarks');const lmMap={};lmAll.forEach(l=>lmMap[l.photoId]=l.points);
+  const locked=!!LEARN.pred.lockedAt;
+  let h='';
+  // Prediction
+  h+=`<div class="sechead"><span class="zh">術前預測 PREDICTION</span><div class="rule"></div></div>`;
+  h+= locked
+    ? `<div class="lockbox"><span>🔒</span><div>已於 ${LEARN.pred.lockedAt.slice(0,16).replace('T',' ')} 封存。封存後不可改，是為了事後對照時避免 hindsight bias。</div></div>`
+    : `<div class="warnbox">趁術前把預測與量化目標寫死，之後回顧才能誠實比對。填完按「封存」鎖定。</div>`;
+  PRED_Q.forEach((q,i)=>{h+=`<div class="qa"><label>${i+1}. ${esc(q)}</label>
+    <textarea rows="2" ${locked?'readonly':''} onchange="predAnswer(${i},this.value)">${esc(LEARN.pred.answers[i]||'')}</textarea></div>`;});
+  h+=`<div class="qa"><label>量化預測目標（回顧時自動比對術後量測）</label>`;
+  if(LEARN.pred.targets.length){h+=LEARN.pred.targets.map((t,i)=>{const m=metricById(t.metricId);
+    return`<div class="entry" style="margin-bottom:7px"><div class="et">${m?esc(m.label):t.metricId} = ${t.value} ± ${t.tol}</div>
+      ${locked?'':`<div class="ea"><button class="del" onclick="removeTarget(${i})">移除</button></div>`}</div>`;}).join('');}
+  else h+=`<div class="hint" style="margin:0 0 8px">尚無量化目標。</div>`;
+  h+=`<div class="dlgrow" style="margin-top:4px">`;
+  if(!locked){h+=`<button class="btn small" onclick="openTargetDlg()">＋ 新增目標</button>
+    <button class="btn pri small" onclick="lockPrediction()">封存預測 🔒</button>`;}
+  else h+=`<button class="btn small" onclick="unlockPrediction()">解除封存</button>`;
+  h+=`</div>`;
+  // Decision log
+  h+=`<div class="sechead"><span class="zh">決策紀錄 DECISION LOG</span><div class="rule"></div>
+    <button class="iconbtn" style="height:auto" onclick="dlgDecision()">＋</button></div>`;
+  h+= LEARN.dec.entries.length? LEARN.dec.entries.map(e=>`<div class="entry"><div class="et">${esc(e.topic)}</div>
+    <div class="em">${e.chosen?'選擇：'+esc(e.chosen)+'\n':''}${e.alt?'排除：'+esc(e.alt)+'\n':''}${e.rationale?esc(e.rationale):''}</div>
+    <div class="ea"><button onclick="dlgDecision('${e.id}')">編輯</button><button class="del" onclick="deleteDecision('${e.id}')">刪除</button></div></div>`).join('')
+    : `<div class="hint" style="margin:0 0 8px">尚無決策紀錄。</div>`;
+  // Reflection
+  h+=`<div class="sechead"><span class="zh">術後反思 REFLECTION</span><div class="rule"></div></div>`;
+  REFL_Q.forEach((q,i)=>{h+=`<div class="qa"><label>${i+1}. ${esc(q)}</label>
+    <textarea rows="2" onchange="reflAnswer(${i},this.value)">${esc(LEARN.refl.answers[i]||'')}</textarea></div>`;});
+  // Reviews (predicted vs actual)
+  h+=`<div class="sechead"><span class="zh">回顧 OUTCOME REVIEW</span><div class="rule"></div>
+    <button class="iconbtn" style="height:auto" onclick="dlgReview()">＋</button></div>`;
+  if(!revs.length)h+=`<div class="hint" style="margin:0 0 8px">機會式回顧：每次實際回診拍照後新增一次，系統自動比對封存的量化預測。</div>`;
+  for(const rv of revs){
+    h+=`<div class="entry"><div class="et">回顧 · ${rv.date}</div>`+pvaTable(rv.date,photos,lmMap,c)+
+      `<div class="ea"><button class="del" onclick="deleteReview('${rv.id}')">刪除</button></div></div>`;
+  }
+  // Lessons
+  h+=`<div class="sechead"><span class="zh">教訓 ERROR DATABASE</span><div class="rule"></div>
+    <button class="iconbtn" style="height:auto" onclick="dlgLesson()">＋</button></div>`;
+  const ltype={complication:'併發症',error:'技術失誤',insight:'洞察'};
+  h+= less.length? less.map(l=>`<div class="entry"><div class="et">${ltype[l.type]||l.type}</div>
+    <div class="em">${esc(l.description)}${l.root?'\n根因：'+esc(l.root):''}${l.ruleId?'\n→ 連結規則':''}</div>
+    <div class="ea"><button class="del" onclick="deleteLesson('${l.id}')">刪除</button></div></div>`).join('')
+    : `<div class="hint" style="margin:0 0 8px">尚無教訓紀錄。</div>`;
+  $('learnbody').innerHTML=h;
+}
+function pvaTable(reviewDate,photos,lmMap,c){
+  const tg=LEARN.pred.targets;
+  if(!tg.length)return`<div class="hint" style="margin:6px 0 0">此次手術無量化預測目標，無法自動比對。</div>`;
+  let rows='';
+  for(const t of tg){const m=metricById(t.metricId);if(!m)continue;
+    const act=computeActual(m,reviewDate,photos,lmMap,c);
+    let actTxt='<span class="na">無資料</span>',dTxt='<span class="na">—</span>',hitCell='<span class="na">—</span>';
+    if(act){const d=act.val-t.value;const hit=Math.abs(d)<=t.tol;
+      actTxt=act.val.toFixed(2);dTxt=(d>=0?'+':'')+d.toFixed(2);
+      hitCell=hit?'<span class="hit">✓</span>':'<span class="miss">✗</span>';}
+    rows+=`<tr><td>${esc(m.label)}</td><td class="num">${t.value}±${t.tol}</td><td class="num">${actTxt}</td><td class="num">${dTxt}</td><td>${hitCell}</td></tr>`;}
+  return`<table class="pva"><tr><th>項目</th><th>預測</th><th>實際</th><th>Δ</th><th>命中</th></tr>${rows}</table>`;
+}
+function computeActual(metric,targetDate,photos,lmMap,c){
+  const views=metric.view==='frontal'?['frontal']:['lat-r','lat-l'];
+  const needCal=LEN_KEYS.has(metric.key);
+  let best=null,bestDiff=Infinity;
+  for(const p of photos){
+    if(!views.includes(p.view))continue;
+    const st=stageOf(p.date,c.surgeryDate);if(st.phase!=='post')continue;
+    if(needCal&&!p.pxPerMm)continue;
+    const pts=lmMap[p.id];if(!pts)continue;
+    const rows=computeMeasures(p.view,pts,p.pxPerMm,refs);const row=rows.find(r=>r.key===metric.key);
+    if(!row||row.val==null)continue;
+    const diff=Math.abs(daysBetween(p.date,targetDate));
+    if(diff<bestDiff){bestDiff=diff;best={val:row.val,date:p.date};}}
+  return best;
+}
+/* prediction handlers */
+async function savePred(){await putRec('predictions',LEARN.pred);}
+function predAnswer(i,v){LEARN.pred.answers[i]=v;savePred();}
+function reflAnswer(i,v){LEARN.refl.answers[i]=v;putRec('reflections',LEARN.refl);}
+function openTargetDlg(){$('f-tmetric').innerHTML=metricCatalog().map(m=>`<option value="${m.id}">${esc(m.label)}</option>`).join('');
+  $('f-tval').value='';$('f-ttol').value='5';openDlg('dlg-target');}
+async function addTarget(ev){ev.preventDefault();
+  const t={metricId:$('f-tmetric').value,value:parseFloat($('f-tval').value),tol:Math.abs(parseFloat($('f-ttol').value))};
+  if(isNaN(t.value)||isNaN(t.tol))return false;
+  LEARN.pred.targets.push(t);await savePred();closeDlg('dlg-target');renderLearn();return false;}
+async function removeTarget(i){LEARN.pred.targets.splice(i,1);await savePred();renderLearn();}
+async function lockPrediction(){LEARN.pred.lockedAt=nowISO();await savePred();renderLearn();toast('已封存預測');}
+async function unlockPrediction(){if(!await confirmDlg('解除封存','解除後可再修改，但會失去防 hindsight 的意義。仍要解除？','解除'))return;
+  LEARN.pred.lockedAt=null;await savePred();renderLearn();}
+/* decision handlers */
+let editingDecId=null;
+function dlgDecision(id){editingDecId=id||null;const e=id?LEARN.dec.entries.find(x=>x.id===id):null;
+  $('dlgd-h').textContent=id?'編輯決策':'新增決策';
+  $('f-dtopic').value=e?e.topic:'';$('f-dchosen').value=e?(e.chosen||''):'';$('f-dalt').value=e?(e.alt||''):'';$('f-drat').value=e?(e.rationale||''):'';
+  openDlg('dlg-decision');}
+async function saveDecision(ev){ev.preventDefault();
+  const v={topic:$('f-dtopic').value.trim(),chosen:$('f-dchosen').value.trim(),alt:$('f-dalt').value.trim(),rationale:$('f-drat').value.trim()};
+  if(!v.topic)return false;
+  if(editingDecId){const e=LEARN.dec.entries.find(x=>x.id===editingDecId);Object.assign(e,v);}
+  else LEARN.dec.entries.push({id:uid(),...v,createdAt:nowISO()});
+  await putRec('decisions',LEARN.dec);closeDlg('dlg-decision');renderLearn();return false;}
+async function deleteDecision(id){LEARN.dec.entries=LEARN.dec.entries.filter(x=>x.id!==id);await putRec('decisions',LEARN.dec);renderLearn();}
+/* review handlers */
+function dlgReview(){$('f-rvdate').value=today();openDlg('dlg-review');}
+async function saveReview(ev){ev.preventDefault();
+  await putRec('reviews',{id:uid(),caseId:cur.kase.id,date:$('f-rvdate').value,createdAt:nowISO()});
+  closeDlg('dlg-review');renderLearn();return false;}
+async function deleteReview(id){if(!await confirmDlg('刪除回顧','刪除這次回顧紀錄？','刪除'))return;await store.del('reviews',id);renderLearn();}
+/* lesson handlers */
+async function dlgLesson(){const rules=await allRec('rules');
+  $('f-lrule').innerHTML=`<option value="">— 無 —</option>`+rules.map(r=>`<option value="${r.id}">${esc(r.statement.slice(0,40))}</option>`).join('');
+  $('f-ltype').value='complication';$('f-ldesc').value='';$('f-lroot').value='';openDlg('dlg-lesson');}
+async function saveLesson(ev){ev.preventDefault();
+  const desc=$('f-ldesc').value.trim();if(!desc)return false;
+  await putRec('lessons',{id:uid(),caseId:cur.kase.id,type:$('f-ltype').value,description:desc,root:$('f-lroot').value.trim(),ruleId:$('f-lrule').value||null,createdAt:nowISO()});
+  closeDlg('dlg-lesson');renderLearn();return false;}
+async function deleteLesson(id){if(!await confirmDlg('刪除教訓','刪除這筆教訓？','刪除'))return;await store.del('lessons',id);renderLearn();}
+
+/* ===================================================================
+   RULES LIBRARY
+   =================================================================== */
+const RULE_STATUS={hypothesis:['假設中','hyp'],testing:['驗證中','test'],established:['已確立','est'],refuted:['已推翻','ref']};
+async function renderRules(){
+  const rules=(await allRec('rules')).sort((a,b)=>{
+    const ord={testing:0,hypothesis:1,established:2,refuted:3};
+    return (ord[a.status]-ord[b.status])||(b.updatedAt||'').localeCompare(a.updatedAt||'');});
+  const el=$('rulesbody');
+  if(!rules.length){el.innerHTML=`<div class="empty">尚無經驗法則。<br>把你觀察到的規律寫成假設（如「厚皮膚→projection 少給」），開 case 時系統會依標籤提示驗證，累積成你的個人知識庫。</div>`;return;}
+  el.innerHTML=rules.map(r=>{const s=RULE_STATUS[r.status]||['?','hyp'];
+    const tags=(r.tags||[]).length?`<div class="d">標籤：${r.tags.map(esc).join(', ')}</div>`:'';
+    return`<div class="entry"><div class="et"><span class="pill ${s[1]}">${s[0]}</span> ${esc(r.statement)}</div>
+      ${tags}<div class="d">套用 ${(r.appliedCases||[]).length} 次${r.notes?' · '+esc(r.notes):''}</div>
+      <div class="ea"><button onclick="dlgRule('${r.id}')">編輯</button></div></div>`;}).join('');
+}
+let editingRule=null;
+function dlgRule(id){editingRule=null;
+  (async()=>{const r=id?await getRec('rules',id):null;editingRule=r||null;
+    $('dlgr-h').textContent=id?'編輯規則':'新增規則';
+    $('f-rstmt').value=r?r.statement:'';$('f-rstatus').value=r?r.status:'hypothesis';
+    $('f-rtags').value=r?(r.tags||[]).join(', '):'';$('f-rnotes').value=r?(r.notes||''):'';
+    $('dlgr-del').style.display=r?'flex':'none';openDlg('dlg-rule');})();}
+async function saveRule(ev){ev.preventDefault();
+  const stmt=$('f-rstmt').value.trim();if(!stmt)return false;
+  const tags=$('f-rtags').value.split(',').map(s=>s.trim()).filter(Boolean);
+  if(editingRule){Object.assign(editingRule,{statement:stmt,status:$('f-rstatus').value,tags,notes:$('f-rnotes').value.trim(),updatedAt:nowISO()});
+    await putRec('rules',editingRule);}
+  else await putRec('rules',{id:uid(),statement:stmt,status:$('f-rstatus').value,tags,notes:$('f-rnotes').value.trim(),appliedCases:[],originCases:[],createdAt:nowISO(),updatedAt:nowISO()});
+  closeDlg('dlg-rule');renderRules();return false;}
+async function deleteRule(){if(!editingRule)return;if(!await confirmDlg('刪除規則','刪除這條規則？','刪除'))return;
+  await store.del('rules',editingRule.id);closeDlg('dlg-rule');renderRules();}
+async function applyRuleToCase(ruleId){const r=await getRec('rules',ruleId);if(!r)return;
+  r.appliedCases=r.appliedCases||[];if(!r.appliedCases.includes(cur.kase.id))r.appliedCases.push(cur.kase.id);
+  if(r.status==='hypothesis')r.status='testing';r.updatedAt=nowISO();await putRec('rules',r);renderCase();toast('已套用到本次手術');}
+
+/* ===================================================================
+   STATS
+   =================================================================== */
+async function renderStats(){
+  const[pts,cases,photos,forms,preds,reviews,rules,lmAll]=await Promise.all([
+    allRec('patients'),allRec('cases'),allRec('photos'),allRec('forms'),allRec('predictions'),allRec('reviews'),allRec('rules'),allRec('landmarks')]);
+  const lmMap={};lmAll.forEach(l=>lmMap[l.photoId]=l.points);
+  const cal=photos.filter(p=>p.pxPerMm).length;
+  const lockedPred=preds.filter(p=>p.lockedAt).length;
+  // predicted vs actual aggregate
+  let hits=0,evald=0;
+  for(const rv of reviews){const c=cases.find(x=>x.id===rv.caseId);if(!c)continue;
+    const pred=preds.find(p=>p.caseId===rv.caseId);if(!pred||!pred.lockedAt||!pred.targets.length)continue;
+    const cphotos=photos.filter(p=>p.caseId===c.id);
+    for(const t of pred.targets){const m=metricById(t.metricId);if(!m)continue;
+      const act=computeActual(m,rv.date,cphotos,lmMap,c);if(!act)continue;
+      evald++;if(Math.abs(act.val-t.value)<=t.tol)hits++;}}
+  const rate=evald?Math.round(hits/evald*100):null;
+  const byStatus=k=>rules.filter(r=>r.status===k).length;
+  $('statsbody').innerHTML=`
+    <div class="setblock"><h3>預測命中率</h3>
+      <div class="statrow"><span>已比對的量化目標</span><b>${evald}</b></div>
+      <div class="statrow"><span>命中（在容許範圍內）</span><b>${hits}</b></div>
+      <div class="statrow"><span>命中率</span><b>${rate==null?'—':rate+'%'}</b></div>
+      <p class="hint" style="margin-top:10px">僅計入「已封存預測 + 有術後量測」的 case。命中率不是分數，是校準你預測與現實落差的指標。</p></div>
+    <div class="setblock"><h3>規則庫</h3>
+      <div class="statrow"><span>驗證中 Testing</span><b>${byStatus('testing')}</b></div>
+      <div class="statrow"><span>假設中 Hypothesis</span><b>${byStatus('hypothesis')}</b></div>
+      <div class="statrow"><span>已確立 Established</span><b>${byStatus('established')}</b></div>
+      <div class="statrow"><span>已推翻 Refuted</span><b>${byStatus('refuted')}</b></div></div>
+    <div class="setblock"><h3>資料量</h3>
+      <div class="statrow"><span>病人</span><b>${pts.length}</b></div>
+      <div class="statrow"><span>Case</span><b>${cases.length}</b></div>
+      <div class="statrow"><span>照片（已校正）</span><b>${photos.length}（${cal}）</b></div>
+      <div class="statrow"><span>已封存預測</span><b>${lockedPred}</b></div>
+      <div class="statrow"><span>回顧次數</span><b>${reviews.length}</b></div></div>`;
+}
+
+/* ===================================================================
+   COMPARE (pre/post overlay)
+   =================================================================== */
+let CMP={photos:[],ai:0,bi:0,opacity:0.5,imgA:null,imgB:null};
+async function renderCompare(){
+  const c=cur.kase;$('cmp-sub').textContent=c.label?(' · '+c.label):'';
+  const photos=(await allRec('photos')).filter(p=>p.caseId===c.id).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const el=$('comparebody');
+  if(photos.length<2){el.innerHTML=`<div class="empty">需要至少 2 張照片才能疊圖比對。<br>建議同一視角的術前與術後各一張。</div>`;return;}
+  CMP.photos=photos;
+  const opt=(p)=>{const st=stageOf(p.date,c.surgeryDate);return`${VIEW_LABEL[p.view]||p.view} · ${st.txt} · ${p.date}`;};
+  // defaults: A = first pre (or first), B = last post (or last), prefer laterals
+  const preIdx=photos.findIndex(p=>stageOf(p.date,c.surgeryDate).phase!=='post');
+  CMP.ai=preIdx>=0?preIdx:0;CMP.bi=photos.length-1;if(CMP.bi===CMP.ai)CMP.bi=Math.max(0,photos.length-1);
+  el.innerHTML=`<div class="selrow">
+      <select id="cmp-a" onchange="cmpSel('a',this.value)">${photos.map((p,i)=>`<option value="${i}" ${i===CMP.ai?'selected':''}>底：${opt(p)}</option>`).join('')}</select>
+      <select id="cmp-b" onchange="cmpSel('b',this.value)">${photos.map((p,i)=>`<option value="${i}" ${i===CMP.bi?'selected':''}>疊：${opt(p)}</option>`).join('')}</select></div>
+    <div class="cmpwrap"><canvas id="cmpcv"></canvas></div>
+    <div class="slrow"><span class="hint" style="margin:0">疊圖透明度</span>
+      <input type="range" min="0" max="100" value="${Math.round(CMP.opacity*100)}" oninput="cmpOpacity(this.value)"></div>
+    <p class="hint">兩張照片各自置中縮放疊合；不同照片無法像素級對位，供視覺比對趨勢用。要精準數值請用各照片的量測功能。</p>`;
+  await cmpLoad();
+}
+async function cmpLoad(){
+  const a=CMP.photos[CMP.ai],b=CMP.photos[CMP.bi];
+  CMP.imgA=await decodeUpright(await getPhotoBlob(a));
+  CMP.imgB=await decodeUpright(await getPhotoBlob(b));
+  cmpDraw();
+}
+function cmpDraw(){
+  const cvs=$('cmpcv');if(!cvs||!CMP.imgA)return;
+  const wrap=cvs.parentElement,W=wrap.clientWidth||360,H=Math.round(W*4/3);
+  const dpr=Math.min(window.devicePixelRatio||1,3);
+  cvs.width=W*dpr;cvs.height=H*dpr;cvs.style.height=H+'px';
+  const x=cvs.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);
+  x.fillStyle='#101619';x.fillRect(0,0,W,H);
+  const drawFit=(img,alpha)=>{const iw=img.width||img.naturalWidth,ih=img.height||img.naturalHeight;
+    const s=Math.min(W/iw,H/ih);const w=iw*s,h=ih*s;x.globalAlpha=alpha;x.drawImage(img,(W-w)/2,(H-h)/2,w,h);x.globalAlpha=1;};
+  drawFit(CMP.imgA,1);if(CMP.imgB)drawFit(CMP.imgB,CMP.opacity);
+}
+async function cmpSel(which,v){if(which==='a')CMP.ai=+v;else CMP.bi=+v;await cmpLoad();}
+function cmpOpacity(v){CMP.opacity=(+v)/100;cmpDraw();}
+window.addEventListener('resize',()=>{if($('scr-compare').classList.contains('active'))cmpDraw();});
+
+/* ===================================================================
+   SETTINGS
+   =================================================================== */
+async function renderSettings(){
+  $('refgrid').innerHTML=REF_META.map(r=>`<div class="n">${esc(r.name)}<small>${esc(r.sub)}</small></div>
+    <input type="number" step="0.01" id="ref-${r.key}-0" value="${refs[r.key][0]}" ${r.oneSided?'disabled style="opacity:.4"':''}>
+    <input type="number" step="0.01" id="ref-${r.key}-1" value="${refs[r.key][1]}">`).join('');
+  $('skincolor').value=skinColor;$('skinpv').style.background=skinColor;
+  const[pts,cs,phs]=await Promise.all([allRec('patients'),allRec('cases'),allRec('photos')]);
+  let est='';try{if(navigator.storage&&navigator.storage.estimate){const e=await navigator.storage.estimate();
+    if(e&&e.usage!=null)est=`<div class="statrow"><span>儲存空間使用</span><b>${(e.usage/1048576).toFixed(1)} MB${e.quota?' / '+(e.quota/1073741824).toFixed(1)+' GB':''}</b></div>`;}}catch(e){}
+  const kt={idb:'IndexedDB（持久）',kv:'App 儲存（持久）',mem:'記憶體（暫存！）'}[store.kind];
+  $('setstats').innerHTML=`<div class="statrow"><span>病人</span><b>${pts.length}</b></div>
+    <div class="statrow"><span>Case</span><b>${cs.length}</b></div>
+    <div class="statrow"><span>照片</span><b>${phs.length}</b></div>${est}
+    <div class="statrow"><span>儲存引擎</span><b>${kt}</b></div>`;
+  $('skincolor').oninput=e=>{$('skinpv').style.background=e.target.value;};
+}
+async function saveRefs(){for(const r of REF_META){const lo=parseFloat($(`ref-${r.key}-0`).value),hi=parseFloat($(`ref-${r.key}-1`).value);
+  if(!isNaN(lo)&&!isNaN(hi))refs[r.key]=[lo,hi];else if(r.oneSided&&!isNaN(hi))refs[r.key]=[0,hi];}
+  await persistRefs();toast('參考區間已儲存');}
+async function saveSkin(){skinColor=$('skincolor').value;DRAW_COLORS[3].c=skinColor;await persistSkin();$('skinpv').style.background=skinColor;toast('皮膚色已儲存');}
+async function wipeAll(){if(!await confirmDlg('清除全部資料','將刪除此裝置上的所有資料。建議先匯出備份。','我了解，清除'))return;
+  if(!await confirmDlg('最後確認','此動作無法復原。確定清除？','確定清除'))return;
+  for(const t of TABLES)await store.clear(t);
+  thumbURL.forEach(u=>URL.revokeObjectURL(u));thumbURL.clear();
+  refs={...DEFAULT_REFS};skinColor=SKIN_DEFAULT;DRAW_COLORS[3].c=skinColor;toast('已清除');renderSettings();}
+
+/* ===================================================================
+   BACKUP  (store-only ZIP + optional AES-GCM) — table-driven
+   =================================================================== */
+/*ZIP-UTILS-START*/
+const CRC_TABLE=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;
+  for(let k=0;k<8;k++)c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);t[n]=c>>>0;}return t;})();
+function crc32(u8){let c=0xFFFFFFFF;for(let i=0;i<u8.length;i++)c=CRC_TABLE[(c^u8[i])&0xFF]^(c>>>8);return(c^0xFFFFFFFF)>>>0;}
+function dosDT(d){const time=((d.getHours()&31)<<11)|((d.getMinutes()&63)<<5)|((d.getSeconds()>>1)&31);
+  const date=(((d.getFullYear()-1980)&127)<<9)|(((d.getMonth()+1)&15)<<5)|(d.getDate()&31);return{time,date};}
+function buildZip(entries){const now=dosDT(new Date());const parts=[],central=[];let offset=0;const enc=new TextEncoder();
+  for(const e of entries){const nu=enc.encode(e.name);const crc=crc32(e.u8),size=e.u8.length;
+    const lfh=new DataView(new ArrayBuffer(30));lfh.setUint32(0,0x04034b50,true);lfh.setUint16(4,20,true);lfh.setUint16(6,0x0800,true);lfh.setUint16(8,0,true);
+    lfh.setUint16(10,now.time,true);lfh.setUint16(12,now.date,true);lfh.setUint32(14,crc,true);lfh.setUint32(18,size,true);lfh.setUint32(22,size,true);
+    lfh.setUint16(26,nu.length,true);lfh.setUint16(28,0,true);
+    parts.push(new Uint8Array(lfh.buffer),nu,e.u8);central.push({nu,crc,size,offset});offset+=30+nu.length+size;}
+  const cdStart=offset;
+  for(const c of central){const cdh=new DataView(new ArrayBuffer(46));cdh.setUint32(0,0x02014b50,true);cdh.setUint16(4,20,true);cdh.setUint16(6,20,true);
+    cdh.setUint16(8,0x0800,true);cdh.setUint16(10,0,true);cdh.setUint16(12,now.time,true);cdh.setUint16(14,now.date,true);
+    cdh.setUint32(16,c.crc,true);cdh.setUint32(20,c.size,true);cdh.setUint32(24,c.size,true);cdh.setUint16(28,c.nu.length,true);cdh.setUint32(42,c.offset,true);
+    parts.push(new Uint8Array(cdh.buffer),c.nu);offset+=46+c.nu.length;}
+  const eocd=new DataView(new ArrayBuffer(22));eocd.setUint32(0,0x06054b50,true);eocd.setUint16(8,central.length,true);eocd.setUint16(10,central.length,true);
+  eocd.setUint32(12,offset-cdStart,true);eocd.setUint32(16,cdStart,true);parts.push(new Uint8Array(eocd.buffer));
+  return new Blob(parts,{type:'application/zip'});}
+function parseZip(buf){const u8=new Uint8Array(buf),dv=new DataView(buf);let eocd=-1;
+  for(let i=u8.length-22;i>=Math.max(0,u8.length-22-65536);i--){if(dv.getUint32(i,true)===0x06054b50){eocd=i;break;}}
+  if(eocd<0)throw new Error('不是有效的 zip');const count=dv.getUint16(eocd+10,true),cdOff=dv.getUint32(eocd+16,true);
+  const files={};let p=cdOff;const dec=new TextDecoder();
+  for(let i=0;i<count;i++){if(dv.getUint32(p,true)!==0x02014b50)throw new Error('zip 目錄損壞');
+    const method=dv.getUint16(p+10,true),size=dv.getUint32(p+24,true);
+    const nl=dv.getUint16(p+28,true),xl=dv.getUint16(p+30,true),cl=dv.getUint16(p+32,true),lfhOff=dv.getUint32(p+42,true);
+    const name=dec.decode(u8.subarray(p+46,p+46+nl));if(method!==0)throw new Error('備份含壓縮項目，不支援');
+    const lnl=dv.getUint16(lfhOff+26,true),lxl=dv.getUint16(lfhOff+28,true),ds=lfhOff+30+lnl+lxl;
+    files[name]=u8.subarray(ds,ds+size);p+=46+nl+xl+cl;}
+  return files;}
+/*ZIP-UTILS-END*/
+/*CRYPTO-UTILS-START*/
+async function deriveKey(pass,salt){const km=await crypto.subtle.importKey('raw',te(pass),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:250000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);}
+const MAGIC='RCSE1';
+async function encryptBuf(buf,pass){const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));
+  const key=await deriveKey(pass,salt);const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,buf);
+  return new Blob([te(MAGIC),salt,iv,new Uint8Array(ct)]);}
+async function decryptBuf(buf,pass){const u8=new Uint8Array(buf);const salt=u8.subarray(5,21),iv=u8.subarray(21,33),ct=u8.subarray(33);
+  const key=await deriveKey(pass,salt);return crypto.subtle.decrypt({name:'AES-GCM',iv},key,ct);}
+/*CRYPTO-UTILS-END*/
+let passResolve=null;
+function askPass(title,desc){return new Promise(res=>{passResolve=res;$('dlgpass-h').textContent=title;$('dlgpass-p').textContent=desc;$('f-pass').value='';openDlg('dlg-pass');});}
+function passSubmit(ev){ev.preventDefault();closeDlg('dlg-pass');const v=$('f-pass').value;const r=passResolve;passResolve=null;r&&r(v||null);return false;}
+function passCancel(){closeDlg('dlg-pass');const r=passResolve;passResolve=null;r&&r(null);}
+function downloadBlob(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;
+  document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);}
+
+async function exportBackup(){const prog=$('bkprog');
+  try{prog.textContent='整理資料…';
+    const data={};for(const t of TABLES)data[t]=await allRec(t);
+    if(!data.patients.length&&!data.photos.length){prog.textContent='';toast('目前沒有資料可備份');return;}
+    const photoMetas=data.photos.map(p=>{const{blob,dataUrl,...m}=p;m.file=`photos/${p.id}.jpg`;return m;});
+    const records={schemaVersion:2,exportedAt:nowISO(),data:{...data,photos:photoMetas}};
+    const manifest={app:'RhinoCase',schemaVersion:2,exportedAt:records.exportedAt,
+      counts:{patients:data.patients.length,cases:data.cases.length,photos:data.photos.length}};
+    const entries=[{name:'manifest.json',u8:te(JSON.stringify(manifest,null,1))},{name:'records.json',u8:te(JSON.stringify(records))}];
+    let i=0;for(const p of data.photos){prog.textContent=`打包照片 ${++i}/${data.photos.length}…`;
+      const b=await getPhotoBlob(p);entries.push({name:`photos/${p.id}.jpg`,u8:new Uint8Array(await b.arrayBuffer())});}
+    prog.textContent='建立 zip…';const zip=buildZip(entries);
+    const pass=await askPass('設定備份密碼（可選）','設定密碼將以 AES-GCM 加密整包備份。留空或按「不加密」則輸出一般 zip。密碼遺失即無法復原。');
+    const stamp=today();
+    if(pass){if(zip.size>300*1048576&&!await confirmDlg('檔案較大',`備份 ${(zip.size/1048576).toFixed(0)} MB，加密需一次載入記憶體。仍要加密？`,'繼續加密')){
+        prog.textContent='已改為未加密輸出';downloadBlob(zip,`RhinoCase備份_${stamp}.zip`);return;}
+      prog.textContent='加密中…';const enc=await encryptBuf(await zip.arrayBuffer(),pass);downloadBlob(enc,`RhinoCase備份_${stamp}.rcse`);}
+    else downloadBlob(zip,`RhinoCase備份_${stamp}.zip`);
+    prog.textContent=`完成 · ${manifest.counts.patients} 病人 / ${manifest.counts.photos} 照片 · ${(zip.size/1048576).toFixed(1)} MB`;
+    toast('備份已輸出，請於分享面板選儲存位置');
+  }catch(e){prog.textContent='';toast('匯出失敗：'+e.message);}}
+
+async function importBackup(file){if(!file)return;const prog=$('bkprog');
+  try{prog.textContent='讀取檔案…';let buf=await file.arrayBuffer();
+    const head=td(new Uint8Array(buf,0,5));
+    if(head===MAGIC){const pass=await askPass('輸入備份密碼','此備份已加密。');if(!pass){prog.textContent='';toast('已取消');return;}
+      prog.textContent='解密中…';try{buf=await decryptBuf(buf,pass);}catch(e){prog.textContent='';toast('密碼錯誤或檔案損壞');return;}}
+    const files=parseZip(buf);if(!files['records.json'])throw new Error('備份缺少 records.json');
+    const records=JSON.parse(td(files['records.json']));
+    const sv=records.schemaVersion||1;if(sv>2)throw new Error('備份版本較新，請先更新 App');
+    // support v1 (flat keys) and v2 (data:{})
+    const data=records.data||{settings:records.settings,patients:records.patients,cases:records.cases,photos:records.photos,landmarks:records.landmarks};
+    const[curP,curPh]=await Promise.all([allRec('patients'),allRec('photos')]);
+    if(!await confirmDlg('匯入備份',`將「完全取代」現有資料。\n現有：${curP.length} 病人 / ${curPh.length} 照片\n備份：${(data.patients||[]).length} 病人 / ${(data.photos||[]).length} 照片（匯出於 ${(records.exportedAt||'').slice(0,10)}）`,'取代並匯入'))return;
+    prog.textContent='清除現有資料…';for(const t of TABLES)await store.clear(t);
+    thumbURL.forEach(u=>URL.revokeObjectURL(u));thumbURL.clear();
+    for(const t of TABLES){if(t==='photos')continue;for(const row of (data[t]||[]))await putRec(t,row);}
+    let i=0;const metas=data.photos||[];
+    for(const m of metas){prog.textContent=`還原照片 ${++i}/${metas.length}…`;
+      const bytes=files[m.file||`photos/${m.id}.jpg`];if(!bytes)continue;const{file:_f,...meta}=m;
+      await savePhotoRec(meta,new Blob([bytes],{type:'image/jpeg'}));}
+    await loadSettings();prog.textContent=`匯入完成 · ${(data.patients||[]).length} 病人 / ${i} 照片`;toast('匯入完成');go('#home');
+  }catch(e){prog.textContent='';toast('匯入失敗：'+e.message);}}
+
+/* ===================================================================
+   BOOT
+   =================================================================== */
+(async function boot(){
+  store=await createStore();
+  await loadSettings();
+  try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}
+  try{if('serviceWorker' in navigator&&location.protocol.indexOf('http')===0)navigator.serviceWorker.register('./sw.js').catch(()=>{});}catch(e){}
+  route();
+})();
+</script>
+</body>
+</html>
