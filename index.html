@@ -293,7 +293,9 @@ dialog::backdrop{background:rgba(22,35,43,.35)}
 <!-- CASE HUB -->
 <section class="screen" id="scr-case">
   <div class="topbar"><button class="iconbtn plain" onclick="history.back()">‹ 返回</button>
-    <h1 id="cs-title">Case</h1><button class="iconbtn" onclick="dlgCase(cur.kase)">編輯</button></div>
+    <h1 id="cs-title">Case</h1>
+    <button class="iconbtn" style="color:var(--mark)" onclick="deleteCurrentCase()">刪除</button>
+    <button class="iconbtn" onclick="dlgCase(cur.kase)">編輯</button></div>
   <div class="content">
     <div id="rulenote"></div>
     <div class="modgrid" id="casemods"></div>
@@ -396,7 +398,7 @@ dialog::backdrop{background:rgba(22,35,43,.35)}
     <div class="setblock"><h3>資料統計</h3><div id="setstats"></div></div>
     <div class="setblock"><h3>危險區</h3><p>清除此裝置上的全部資料。清除前請先匯出備份。</p>
       <div class="dlgrow" style="margin-top:0"><button class="btn danger" onclick="wipeAll()">清除全部資料</button></div></div>
-    <p class="hint" style="text-align:center">RhinoCase v0.8 · local-first · 資料不離開此裝置</p>
+    <p class="hint" style="text-align:center">RhinoCase v0.9 · local-first · 資料不離開此裝置</p>
   </div>
 </section>
 
@@ -1140,6 +1142,7 @@ async function saveCase(ev){if(ev)ev.preventDefault();
       await putRec('cases',c);closeDlg('dlg-case');go('#c/'+c.id);toast('已建立手術');}
   }catch(e){toast('儲存失敗：'+e.message);}
   return false;}
+async function deleteCurrentCase(){if(!cur.kase)return;editingCase=cur.kase;await deleteCase();}
 async function deleteCase(){const c=editingCase;if(!c)return;
   const photos=(await allRec('photos')).filter(p=>p.caseId===c.id);
   if(!await confirmDlg('刪除手術',`將刪除此次手術及其 ${photos.length} 張照片、量測、表單與學習紀錄。無法復原。`,'刪除'))return;
@@ -1206,6 +1209,19 @@ const PV={img:null,iw:0,ih:0,s:1,tx:0,ty:0,fit:1,cw:0,ch:0,dpr:1,
   color:'#141B1F',width:4,eraser:false,penOnly:true,lmVis:true,aes:null,aesRows:null};
 const AES_SCHEMA={frontal:'frontal','lat-r':'lateral','lat-l':'lateral',basal:'basal'};
 const cv=$('cv'),cwrap=cv.parentElement;
+// keep canvas backing store in sync with wrapper size (rail height changes when switching modes)
+new ResizeObserver(()=>{
+  if(!$('scr-photo').classList.contains('active')||!PV.img)return;
+  const r=cwrap.getBoundingClientRect();
+  if(Math.abs(r.width-PV.cw)<1&&Math.abs(r.height-PV.ch)<1)return;
+  const wasFit=Math.abs(PV.s-PV.fit)<0.02;
+  const cIp=toImg(PV.cw/2,PV.ch/2);            // image point at old canvas centre
+  resizeCV();
+  PV.fit=Math.min(PV.cw/PV.iw,PV.ch/PV.ih)*0.97;
+  if(wasFit)fitView();
+  else{PV.tx=PV.cw/2-cIp.x*PV.s;PV.ty=PV.ch/2-cIp.y*PV.s;} // keep same image point centred
+  draw();
+}).observe(cwrap);
 
 function resizeCV(){const r=cwrap.getBoundingClientRect();
   PV.dpr=Math.min(window.devicePixelRatio||1,3);PV.cw=r.width;PV.ch=r.height;
@@ -1389,7 +1405,8 @@ cv.addEventListener('pointermove',e=>{
     PV.moved=PV.moved||Math.hypot(pt.x-PV.down.x,pt.y-PV.down.y)>3;draw();return;}
   if(!PV.down)return;
   if(!PV.moved&&Math.hypot(pt.x-PV.down.x,pt.y-PV.down.y)>8)PV.moved=true;
-  if(PV.moved){PV.tx+=pt.x-prev.x;PV.ty+=pt.y-prev.y;draw();}
+  // single-finger pan only in view/aes modes; in mark/cal/free one finger only taps or drags a point
+  if(PV.moved&&(PV.mode==='view'||PV.mode==='aes')){PV.tx+=pt.x-prev.x;PV.ty+=pt.y-prev.y;draw();}
 });
 function endPointer(e){
   if(!PV.pointers.has(e.pointerId))return;
@@ -1459,7 +1476,7 @@ function renderRail(){
         <span class="abbr">${l.k}</span><span>${l.zh}</span>${on?`<span class="x" onclick="removeLm(event,'${l.k}')">✕</span>`:''}</button>`;}).join('');
     const active=set.find(l=>l.k===PV.activeLm);
     body.innerHTML=`<div class="lmchips">${chips}</div>
-      <div class="calmsg">${active?`點照片放置 <b>${active.k}</b>（${esc(active.zh)}）。再點一次即移動該點；要標下一個請先在上方選。`:'點上方晶片選要標的點。'}</div>`+measureChips();
+      <div class="calmsg">${active?`點照片放置 <b>${active.k}</b>（${esc(active.zh)}）。再點該點可拖曳微調；要標下一個請先在上方選。單指只負責點放，<b>雙指</b>縮放平移。`:'點上方晶片選要標的點。'}</div>`+measureChips();
   }else if(PV.mode==='aes'){$('railname').textContent='美學分析';
     body.className='railbody-tall';body.innerHTML=aesPanel();return;
   }else if(PV.mode==='free'){$('railname').textContent='自由量測';
